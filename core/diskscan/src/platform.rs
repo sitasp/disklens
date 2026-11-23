@@ -11,6 +11,11 @@ use std::path::Path;
 /// failed or the file has no clone id; the scanner then deduplicates by inode
 /// only. Failures are intentionally quiet: clone detection is an optimisation
 /// for unique-size accounting, not a reason to abort a scan.
+///
+/// The last path component is followed when it is a symlink. A scan that
+/// follows links classifies the link as the target file and must share that
+/// file's clone id. Asking for the link itself (`FSOPT_NOFOLLOW`) returns no
+/// clone id, so the target is counted once as a clone and again as an inode.
 #[must_use]
 pub fn clone_id(path: &Path) -> Option<u64> {
     #[cfg(target_os = "macos")]
@@ -36,7 +41,6 @@ mod macos {
     /// `ATTR_CMNEXT_CLONEID` — stored in `forkattr` when
     /// `FSOPT_ATTR_CMN_EXTENDED` is set.
     const ATTR_CMNEXT_CLONEID: u32 = 0x0000_0100;
-    const FSOPT_NOFOLLOW: u64 = 0x0000_0001;
     const FSOPT_ATTR_CMN_EXTENDED: u64 = 0x0000_0020;
 
     #[repr(C)]
@@ -86,7 +90,7 @@ mod macos {
                 &mut list,
                 buf.as_mut_ptr().cast(),
                 buf.len(),
-                FSOPT_NOFOLLOW | FSOPT_ATTR_CMN_EXTENDED,
+                FSOPT_ATTR_CMN_EXTENDED,
             )
         };
         if rc != 0 {
