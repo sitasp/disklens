@@ -1,32 +1,48 @@
-# DiskLens
+<h1 align="center">DiskLens</h1>
 
-DiskLens is a macOS app that shows where disk space went and helps delete copies safely. The walk, the size tree, duplicate hashing, and the "which copy do I keep" rules are a Rust library. The window is SwiftUI. They talk through [UniFFI](https://mozilla.github.io/uniffi-rs/).
+<p align="center">
+  A disk map for the Mac. See where the space went, then delete copies only after a review.
+</p>
 
-It is aimed at the same job as DaisyDisk, GrandPerspective, and a careful duplicate finder: a map you can click into, a list beside it, categories, large and old files, and a review step before anything is removed. Removal goes to the Trash unless you explicitly confirm a permanent delete.
+<p align="center">
+  <em>There are many disk maps. This one asks twice before it deletes.</em>
+</p>
 
-```mermaid
-flowchart LR
-  SwiftUI --> UniFFI
-  UniFFI --> Scanner
-  Scanner --> Tree
-  Tree --> Sunburst
-  Scanner --> Duplicates
-  Duplicates --> Selection
-  SwiftUI --> Trash
-```
+<p align="center">
+  <a href="https://github.com/sitasp/disklens/releases/tag/v0.1.0-alpha.1"><img src="https://img.shields.io/badge/Download-DMG-E86B3B.svg?style=for-the-badge&logo=apple&logoColor=white" alt="Download DMG"></a>
+</p>
 
-A longer version of that picture, and the reason each size number exists, is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-14%2B-000000.svg" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/Swift-5-F05138.svg" alt="Swift 5">
+  <img src="https://img.shields.io/badge/Rust-1.83%2B-000000.svg" alt="Rust">
+  <img src="https://img.shields.io/badge/release-0.1.0%20alpha-orange.svg" alt="0.1.0 alpha">
+  <img src="https://img.shields.io/badge/Apple%20Silicon-this%20DMG-333333.svg" alt="Apple silicon build">
+</p>
 
-## What you can do
+<p align="center">
+  <img src="docs/screenshots/map.png" width="720" alt="DiskLens disk map, sunburst of a folder with the file list beside it">
+</p>
 
-- See every mounted volume with used and free space, then scan one.
-- Open any folder.
-- Switch between a sunburst and a treemap, click a slice to go inside, and use the breadcrumb or Command-Up to come back.
-- Read categories (photos, video, archives, developer caches, apps, system files).
-- Filter large and old files.
-- Find duplicates. Files are grouped by size, then by a hash of the first and last blocks, then by a full BLAKE3 hash. Hard links of one file are not reported as copies.
-- Apply a keep rule: newest, oldest, a preferred folder, the shortest path, or the name that does not look like a copy. System folders, Library (including caches), app bundles, and Photos libraries are not auto-selected. If you select one of those yourself, DiskLens explains why it is protected and asks again on the review screen before it is removed.
-- Review the reclaim estimate, then move the selection to the Trash. Permanent delete requires typing `DELETE`. History can put Trash items back.
+<p align="center">
+  <img src="docs/screenshots/duplicates.png" width="720" alt="DiskLens duplicates, with a Library copy left unselected because it is protected">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/review.png" width="720" alt="DiskLens deletion review, listing the protected file again before anything can move">
+</p>
+
+---
+
+DiskLens draws a sunburst or a treemap of a folder, then finds copies. Nothing moves until the review screen. Protected places, including Library and app bundles, stay unselected until you confirm them a second time. The walk, the hashes, and the keep rules are Rust. The window is SwiftUI.
+
+**Map** — Open a folder, or scan a volume from Overview. Click a slice to go inside. Switch to a treemap. Sizes default to unique bytes, so a hard link or an APFS clone is not counted twice.
+
+**Duplicates** — Files are grouped by size, then by the ends of the file, then by a full BLAKE3 hash. Hard links of one file are not reported as copies. Smart selection keeps one and marks the rest, and it will not mark System, Library, or an app bundle.
+
+**Review** — Trash is the default. A protected path you selected yourself is listed again, and Move to Trash stays off until you confirm that list. Permanent delete requires the word `DELETE`. History can put Trash items back.
+
+This download is **0.1.0 alpha**, an ad-hoc signed Apple silicon build. It is not notarized. The first open is Control-click, then Open. Details are in the [release notes](https://github.com/sitasp/disklens/releases/tag/v0.1.0-alpha.1). How the numbers move is in [docs/features/release-versioning.md](docs/features/release-versioning.md).
 
 ## Repository
 
