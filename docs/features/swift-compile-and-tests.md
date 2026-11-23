@@ -47,4 +47,16 @@ The test still uses a fresh directory under `FileManager.default.temporaryDirect
 
 The store scheme's test action runs `DiskLensStoreTests`. CI (`.github/workflows/ci.yml`) runs `build test` for that scheme, not only `build`.
 
-On this Mac both schemes executed 7 tests with 0 failures. The test host logs a failure to contact `com.apple.linkd.autoShortcut` while the app is registering with App Intents. The tests still pass. There is no App Intents code in the target.
+## The App Intents build warning
+
+Xcode 27 runs `appintentsmetadataprocessor` for every app target. With no link to `AppIntents.framework` it prints:
+
+```text
+warning: Metadata extraction skipped, no AppIntents.framework dependency found
+```
+
+`--quiet-warnings` does not filter that line. Passing `--disable` replaces it with a different warning, `Metadata extraction disabled by --disable`.
+
+`apple/DiskLens/Support/NoAppIntents.swift` imports `AppIntents` and declares an empty enum. There is no intent, shortcut, or query. The import is what links the framework. The processor then logs `Extracted no relevant App Intents symbols, skipping writing output` and does not emit a warning.
+
+On this Mac both schemes executed 8 tests with 0 failures. The test host can still log a failure to contact `com.apple.linkd.autoShortcut` while the process starts. That comes from the system, not from an intent we defined, and the tests still pass.

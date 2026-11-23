@@ -229,35 +229,43 @@ final class AppModel {
     }
 
     func chooseFolder(stayOnFilesystem: Bool, startingAt: String? = nil) {
-        guard let url = openFolderPanel(
-            prompt: "Scan",
-            message: Distribution.isAppStore
-                ? "Choose a folder. DiskLens remembers it so a later rescan does not ask again."
-                : "Choose a folder or volume to map.",
-            startingAt: startingAt
-        ) else { return }
-        if let problem = folderAccess.grantPickedFolder(url) {
-            scanActivity = .failed(problem)
+        while true {
+            guard let url = openFolderPanel(
+                prompt: "Scan",
+                message: Distribution.isAppStore
+                    ? "Choose a folder. DiskLens remembers it so a later rescan does not ask again."
+                    : "Choose a folder or volume to map.",
+                startingAt: startingAt
+            ) else { return }
+            guard confirmIfBroadSystemLocation(url.path, action: "Scan") else { continue }
+            if let problem = folderAccess.grantPickedFolder(url) {
+                scanActivity = .failed(problem)
+                section = .map
+                return
+            }
+            beginScan(path: url.path, stayOnFilesystem: stayOnFilesystem || Distribution.isAppStore)
             section = .map
             return
         }
-        beginScan(path: url.path, stayOnFilesystem: stayOnFilesystem || Distribution.isAppStore)
-        section = .map
     }
 
     func chooseDuplicateFolder() {
-        guard let url = openFolderPanel(
-            prompt: "Compare",
-            message: Distribution.isAppStore
-                ? "Choose a folder to compare. Access is saved for the next search and for deletion."
-                : "Choose a folder to search for duplicate files.",
-            startingAt: nil
-        ) else { return }
-        if let problem = folderAccess.grantPickedFolder(url) {
-            duplicateActivity = .failed(problem)
+        while true {
+            guard let url = openFolderPanel(
+                prompt: "Compare",
+                message: Distribution.isAppStore
+                    ? "Choose a folder to compare. Access is saved for the next search and for deletion."
+                    : "Choose a folder to search for duplicate files.",
+                startingAt: nil
+            ) else { return }
+            guard confirmIfBroadSystemLocation(url.path, action: "Compare") else { continue }
+            if let problem = folderAccess.grantPickedFolder(url) {
+                duplicateActivity = .failed(problem)
+                return
+            }
+            beginDuplicates(path: url.path)
             return
         }
-        beginDuplicates(path: url.path)
     }
 
     func beginScan(path: String, stayOnFilesystem: Bool) {
@@ -594,9 +602,27 @@ final class AppModel {
         panel.message = message
         if let startingAt {
             panel.directoryURL = URL(fileURLWithPath: startingAt)
+        } else {
+            // The panel otherwise reopens wherever it was last confirmed.
+            // That is how a stray confirmation mapped all of /Applications.
+            panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser
         }
         guard panel.runModal() == .OK else { return nil }
         return panel.url
+    }
+
+    /// System locations are still allowed. The alert is the second step, so
+    /// pressing Return in the panel cannot start the walk by itself.
+    private func confirmIfBroadSystemLocation(_ path: String, action: String) -> Bool {
+        guard DiskPaths.isBroadSystemLocation(path) else { return true }
+        let name = DiskPaths.displayName(path)
+        let alert = NSAlert()
+        alert.messageText = "\(action) \(name)?"
+        alert.informativeText = "\(path) is a whole system location. DiskLens only reads it, and the walk covers every file inside. Pick a folder inside it unless you mean the entire location."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: action)
+        alert.addButton(withTitle: "Choose Again")
+        return alert.runModal() == .alertFirstButtonReturn
     }
 
     private var currentDuplicateSession: DuplicateSession?

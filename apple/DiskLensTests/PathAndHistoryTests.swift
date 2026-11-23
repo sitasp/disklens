@@ -18,6 +18,16 @@ final class PathAndHistoryTests: XCTestCase {
         XCTAssertNil(DiskPaths.parent(root: "/Users/ada/Projects", current: "/Users/ada/Projects"))
     }
 
+    func testBroadSystemLocationsAreExact() {
+        XCTAssertTrue(DiskPaths.isBroadSystemLocation("/Applications"))
+        XCTAssertTrue(DiskPaths.isBroadSystemLocation("/Applications/"))
+        XCTAssertTrue(DiskPaths.isBroadSystemLocation("/"))
+        XCTAssertTrue(DiskPaths.isBroadSystemLocation("/Library"))
+        XCTAssertFalse(DiskPaths.isBroadSystemLocation("/Applications/Xcode.app"))
+        XCTAssertFalse(DiskPaths.isBroadSystemLocation("/Users/ada/Documents"))
+        XCTAssertFalse(DiskPaths.isBroadSystemLocation("/Applications-old"))
+    }
+
     func testDisplayNameOfRoot() {
         XCTAssertEqual(DiskPaths.displayName("/"), "/")
         XCTAssertEqual(DiskPaths.displayName("/tmp/photos"), "photos")

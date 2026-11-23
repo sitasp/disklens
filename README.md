@@ -102,7 +102,7 @@ The app targets macOS 14 and builds with Xcode 15 or newer. It was verified on m
    xcodebuild -project apple/DiskLens.xcodeproj -scheme DiskLensStore -destination 'platform=macOS' build test
    ```
 
-Signing is ad hoc ("Sign to Run Locally"). No Apple Developer team is required to build, test, or launch on the same Mac. Notarization and App Store distribution still need a team. The direct app is not sandboxed; see [docs/SANDBOX.md](docs/SANDBOX.md) before you ship it.
+Signing is ad hoc ("Sign to Run Locally"). No Apple Developer Program membership is required to build, test, or launch on the same Mac. Notarization and the App Store need that membership, which Apple calls a development team. It is separate from the people working on DiskLens. This Mac has no Apple code-signing certificate, so the project stays ad hoc. See [docs/features/adhoc-signing.md](docs/features/adhoc-signing.md). The direct app is not sandboxed; see [docs/SANDBOX.md](docs/SANDBOX.md) before you ship it.
 
 ### If the Rust static library fails to link
 

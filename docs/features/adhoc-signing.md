@@ -30,8 +30,12 @@ For a Debug build, Xcode still injects `com.apple.security.get-task-allow`. That
 
 `codesign -dv` on the built `DiskLens.app` reports `Signature=adhoc` and `TeamIdentifier=not set`.
 
+## What "development team" means
+
+It is not the DiskLens team and not the Origin namespace `dummy-inc`. Apple uses "development team" for a paid Apple Developer Program membership. That membership has a Team ID (ten characters). Xcode uses it to issue a Developer ID certificate. Notarization submits the signed app to Apple's notary service with that certificate. This Mac has no code-signing identity (`security find-identity -p codesigning` lists none), so there is nothing to notarize with. Enrolling at developer.apple.com is the step that creates the team. After that, set `DEVELOPMENT_TEAM` in `apple/project.yml` to the Team ID and switch `CODE_SIGN_IDENTITY` from `"-"` to `Developer ID Application`. Until then, local ad-hoc signing is the whole signing story.
+
 ## What this does not do
 
-Ad-hoc signing is enough to build, test, and open the app on this Mac. It is not enough to notarize, staple a ticket, or upload to the App Store. Those still need a Developer team and a distribution certificate. Hardened runtime stays on so a later switch back to a team identity does not also have to rediscover which entitlements the app needs.
+Ad-hoc signing is enough to build, test, and open the app on this Mac. It is not enough to notarize, staple a ticket, or upload to the App Store. Hardened runtime stays on so a later switch to a Developer ID certificate does not also have to rediscover which entitlements the app needs.
 
 `xcodebuild` still prints `Metadata extraction skipped, no AppIntents.framework dependency found`. The app does not import App Intents. The message is from `appintentsmetadataprocessor` and does not fail the build.

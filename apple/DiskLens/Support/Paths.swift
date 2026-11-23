@@ -49,6 +49,28 @@ enum DiskPaths {
         guard crumbs.count >= 2 else { return nil }
         return crumbs[crumbs.count - 2].path
     }
+
+    /// Whole system locations. A folder inside one of these is a normal choice.
+    /// The location itself is not: the open panel can hand it back with one
+    /// keypress, and walking it reads every file under it.
+    static func isBroadSystemLocation(_ path: String) -> Bool {
+        let standardized = URL(fileURLWithPath: path).standardizedFileURL.path
+        return broadSystemLocations.contains(standardized)
+    }
+
+    private static let broadSystemLocations: Set<String> = [
+        "/",
+        "/Applications",
+        "/System",
+        "/Library",
+        "/Users",
+        "/Volumes",
+        "/usr",
+        "/bin",
+        "/sbin",
+        "/opt",
+        "/private",
+    ]
 }
 
 enum ProtectedRemovalGate {

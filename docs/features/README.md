@@ -10,4 +10,5 @@ These notes cover the work that made DiskLens build, test, and run on macOS. The
 | [Clone identity](clone-identity.md) | A followed symlink shares the target's APFS clone id |
 | [Swift compile and tests](swift-compile-and-tests.md) | Call-site fixes, main-actor history test, store test host |
 | [Open a folder from the command line](open-folder-from-cli.md) | `--args /path` and "search the scanned folder" |
+| [Open panel and system locations](open-panel-system-locations.md) | The panel starts at home, and `/Applications` asks again |
 | [Chart and duplicate readability](chart-and-duplicate-readability.md) | Sunburst hole, treemap contrast, duplicate toolbar |
