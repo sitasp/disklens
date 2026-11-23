@@ -49,7 +49,14 @@ fn cmd_usage(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn cmd_scan(args: &[String]) -> Result<(), String> {
+struct ScanArgs<'a> {
+    path: &'a str,
+    depth: usize,
+    metric: SizeMetric,
+    options: ScanOptions,
+}
+
+fn parse_scan(args: &[String]) -> Result<ScanArgs<'_>, String> {
     let mut depth = 2usize;
     let mut metric = SizeMetric::UniqueApparent;
     let mut options = ScanOptions::default();
@@ -75,6 +82,12 @@ fn cmd_scan(args: &[String]) -> Result<(), String> {
         index += 1;
     }
     let path = path.ok_or("usage: diskscan scan PATH")?;
+    Ok(ScanArgs { path, depth, metric, options })
+}
+
+fn cmd_scan(args: &[String]) -> Result<(), String> {
+    let parsed = parse_scan(args)?;
+    let ScanArgs { path, depth, metric, options } = parsed;
     let cancel = AtomicBool::new(false);
     let tree = scan(path, &options, &cancel, None).map_err(|err| err.to_string())?;
     println!(
@@ -92,7 +105,12 @@ fn cmd_scan(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-fn cmd_dupes(args: &[String]) -> Result<(), String> {
+struct DupesArgs<'a> {
+    path: &'a str,
+    options: DuplicateOptions,
+}
+
+fn parse_dupes(args: &[String]) -> Result<DupesArgs<'_>, String> {
     let mut options = DuplicateOptions::default();
     let mut path: Option<&str> = None;
     let mut index = 0;
@@ -110,6 +128,13 @@ fn cmd_dupes(args: &[String]) -> Result<(), String> {
         index += 1;
     }
     let path = path.ok_or("usage: diskscan dupes PATH [--min-size BYTES]")?;
+    Ok(DupesArgs { path, options })
+}
+
+fn cmd_dupes(args: &[String]) -> Result<(), String> {
+    let parsed = parse_dupes(args)?;
+    let path = parsed.path;
+    let options = parsed.options;
     let cancel = AtomicBool::new(false);
     let report = find_duplicates(path, &options, &cancel, None).map_err(|err| err.to_string())?;
     println!(
@@ -151,4 +176,50 @@ scan walks a folder on a thread pool and prints a size tree.
 dupes prints files that share a size and a BLAKE3 hash.
 usage prints the volume's total, used, and available space."
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scan_flags_are_parsed_without_walking() {
+        let args = vec![
+            "/tmp/photos".into(),
+            "--depth".into(),
+            "4".into(),
+            "--logical".into(),
+            "--follow".into(),
+            "--no-hidden".into(),
+            "--stay".into(),
+            "--no-clones".into(),
+        ];
+        let parsed = parse_scan(&args).unwrap();
+        assert_eq!(parsed.path, "/tmp/photos");
+        assert_eq!(parsed.depth, 4);
+        assert_eq!(parsed.metric, SizeMetric::LogicalApparent);
+        assert!(parsed.options.follow_symlinks);
+        assert!(!parsed.options.include_hidden);
+        assert!(parsed.options.stay_on_filesystem);
+        assert!(!parsed.options.detect_clones);
+    }
+
+    #[test]
+    fn scan_rejects_a_missing_depth_and_an_unknown_flag() {
+        assert!(parse_scan(&["/tmp".into(), "--depth".into()]).is_err());
+        assert!(parse_scan(&["/tmp".into(), "--nope".into()]).is_err());
+        assert!(parse_scan(&["/tmp".into(), "extra".into()]).is_err());
+        assert!(parse_scan(&[]).is_err());
+    }
+
+    #[test]
+    fn dupes_min_size_parses_and_unknown_commands_fail() {
+        let args = vec!["/tmp".into(), "--min-size".into(), "4096".into()];
+        let parsed = parse_dupes(&args).unwrap();
+        assert_eq!(parsed.path, "/tmp");
+        assert_eq!(parsed.options.min_size, 4096);
+        assert!(parse_dupes(&["--min-size".into(), "nope".into()]).is_err());
+        assert!(run(vec!["paint".into()]).is_err());
+        assert!(run(vec!["help".into()]).is_ok());
+    }
 }

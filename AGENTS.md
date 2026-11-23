@@ -44,6 +44,7 @@ open apple/DiskLens.xcodeproj
 - `DiskLens` is the unsandboxed target. `DiskLensStore` defines `DISKLENS_SANDBOX` and must keep using `NSOpenPanel` plus security-scoped bookmarks (`FolderAccessStore`). Do not let the store target scan a volume root directly.
 - Explicit deletion of a protected path sets `DeletionEntry.protected` and a reason. Do not drop those paths from the plan. The review must list them again and wait for `ProtectedRemovalGate`.
 - New filesystem behaviour needs a temp-dir test: symlinks, hard links, unreadable entries, and cancellation are the cases that have gone wrong before.
+- Every behavior change ships with a unit test. Pure decisions (selection, paths, version text, argument parsing, deletion flags) get a direct test. Filesystem behavior gets a temp-directory test. Do not merge a change that only updates a view or a script when the decision behind it can be asserted. UI layout that cannot be asserted stays covered by the decision it calls.
 
 ## Tests that must keep passing
 

@@ -201,3 +201,40 @@ fn file_piece(path: &Path, meta: &std::fs::Metadata, allocated: u64) -> Duplicat
         nlink: meta.nlink().max(1),
     }
 }
+
+#[cfg(test)]
+mod plan_flags {
+    use super::*;
+
+    fn entry(path: &str, protected: bool) -> DeletionEntry {
+        DeletionEntry {
+            path: path.to_owned(),
+            kind: NodeKind::File,
+            apparent_size: 10,
+            allocated_size: 10,
+            protected,
+            protection_reason: protected.then(|| "inside a Library folder".to_owned()),
+            note: None,
+        }
+    }
+
+    #[test]
+    fn only_an_explicit_protected_entry_asks_again() {
+        let mixed = DeletionPlan {
+            entries: vec![entry("/tmp/a", false), entry("/tmp/Library/b", true)],
+            skipped: vec![],
+            reclaimable_bytes: 10,
+        };
+        assert!(mixed.requires_protected_confirmation());
+        assert_eq!(mixed.protected_entries().len(), 1);
+        assert_eq!(mixed.protected_entries()[0].path, "/tmp/Library/b");
+
+        let ordinary = DeletionPlan {
+            entries: vec![entry("/tmp/a", false)],
+            skipped: vec![],
+            reclaimable_bytes: 10,
+        };
+        assert!(!ordinary.requires_protected_confirmation());
+        assert!(ordinary.protected_entries().is_empty());
+    }
+}
