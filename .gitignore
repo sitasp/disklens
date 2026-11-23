@@ -1,4 +1,7 @@
 target/
+apple/*.xcodeproj
+apple/Vendor/DiskScanFFI.xcframework
+apple/Vendor/include
 **/*.rs.bk
 .DS_Store
 *.xcuserstate

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	    Sandbox is off on purpose. A disk map has to read arbitrary folders the
+	    user picks and, once they grant Full Disk Access, protected areas such
+	    as Mail and other users' home folders. The App Sandbox cannot express
+	    that even with security-scoped bookmarks for a single folder.
+	    See docs/SANDBOX.md.
+	-->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+</dict>
+</plist>
