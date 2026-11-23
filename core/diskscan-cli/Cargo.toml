@@ -1,0 +1,17 @@
+[package]
+name = "diskscan-cli"
+description = "Command-line frontend for the DiskLens scanner, used to exercise the core on any Unix host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "diskscan"
+path = "src/main.rs"
+
+[dependencies]
+diskscan = { path = "../diskscan" }
+
+[lints]
+workspace = true
