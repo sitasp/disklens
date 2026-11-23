@@ -7,13 +7,23 @@ struct DuplicatesView: View {
         Group {
             switch model.duplicateActivity {
             case .idle:
-                EmptyState(
-                    title: "Find copies, keep one",
-                    message: "DiskLens groups files that are the same size, then the same at both ends, then the same all the way through. Hard links of a single file are not listed. Protected places are skipped by the smart rules; selecting one asks you to confirm, and the review asks again.",
-                    symbol: "square.on.square",
-                    actionTitle: "Choose Folder…",
-                    action: { model.chooseDuplicateFolder() }
-                )
+                if let root = model.scanRoot {
+                    EmptyState(
+                        title: "Find copies, keep one",
+                        message: "DiskLens groups files that are the same size, then the same at both ends, then the same all the way through. Hard links of a single file are not listed. Protected places are skipped by the smart rules; selecting one asks you to confirm, and the review asks again.",
+                        symbol: "square.on.square",
+                        actionTitle: "Search \(DiskPaths.displayName(root))",
+                        action: { model.beginDuplicates(path: root) }
+                    )
+                } else {
+                    EmptyState(
+                        title: "Find copies, keep one",
+                        message: "DiskLens groups files that are the same size, then the same at both ends, then the same all the way through. Hard links of a single file are not listed. Protected places are skipped by the smart rules; selecting one asks you to confirm, and the review asks again.",
+                        symbol: "square.on.square",
+                        actionTitle: "Choose Folder…",
+                        action: { model.chooseDuplicateFolder() }
+                    )
+                }
             case .running:
                 running
             case .failed(let message):
@@ -54,6 +64,8 @@ struct DuplicatesView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
+                        .truncationMode(.middle)
+                        .multilineTextAlignment(.center)
                         .frame(maxWidth: 520)
                 }
             } else {
@@ -74,20 +86,26 @@ struct DuplicatesView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .truncationMode(.middle)
+                        .layoutPriority(-1)
                 }
-                Spacer()
+                Spacer(minLength: 8)
                 Text("\(model.duplicateTotal) groups")
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
+                    .fixedSize()
                 if model.unreadableCount > 0 {
                     Text("\(model.unreadableCount) unreadable")
                         .foregroundStyle(.orange)
+                        .fixedSize()
                 }
                 Button("Smart Selection") { model.applySmartSelection() }
+                    .fixedSize()
                     .accessibilityLabel("Apply smart selection")
                 Button("Move Selected to Trash…") {
                     model.reviewPaths(model.selectedDuplicatePaths())
                 }
+                .fixedSize()
                 .disabled(model.selectedDuplicatePaths().isEmpty)
                 .accessibilityLabel("Move selected duplicates to the Trash")
             }

@@ -59,6 +59,8 @@ struct MapView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
+                    .truncationMode(.middle)
+                    .multilineTextAlignment(.center)
                     .frame(maxWidth: 520)
             } else {
                 Text("Starting the walk…")

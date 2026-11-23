@@ -70,7 +70,11 @@ struct SunburstCanvas: View {
             context.fill(path, with: .color(Palette.color(for: arc.category).opacity(arc.isAggregate ? 0.45 : 0.92)))
         }
 
-        let label = Text(title)
+        // The hole is small. A long folder name is shortened so it stays inside
+        // the ring instead of drawing across the slices.
+        let maxChars = max(10, Int(hole / 7))
+        let shown = title.count > maxChars ? String(title.prefix(maxChars - 1)) + "…" : title
+        let label = Text(shown)
             .font(.callout.weight(.semibold))
             .foregroundStyle(.primary)
         context.draw(label, at: center, anchor: .center)

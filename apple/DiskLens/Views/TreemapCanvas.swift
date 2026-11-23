@@ -22,9 +22,11 @@ struct TreemapCanvas: View {
                         with: .color(Palette.color(for: rect.category).opacity(rect.depth == 0 ? 0.88 : 0.72))
                     )
                     if rect.width > 72 && rect.height > 28 && rect.depth == 0 {
+                        // Palette fills are mid-tone. Dark text stays readable on
+                        // every category, including the gold document color.
                         let label = Text(rect.name)
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.black.opacity(0.82))
                         context.draw(label, at: CGPoint(x: plot.minX + 8, y: plot.minY + 14), anchor: .leading)
                     }
                 }
