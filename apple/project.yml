@@ -6,12 +6,19 @@ options:
   createIntermediateGroups: true
   groupSortPosition: top
 settings:
+  ALWAYS_SEARCH_USER_PATHS: NO
   SWIFT_VERSION: "5.0"
   SWIFT_STRICT_CONCURRENCY: minimal
   MACOSX_DEPLOYMENT_TARGET: "14.0"
   MARKETING_VERSION: "1.0.0"
   CURRENT_PROJECT_VERSION: "1"
-  CODE_SIGN_STYLE: Automatic
+  # Ad-hoc ("Sign to Run Locally"). No Apple Developer team is required
+  # to build, test, or launch on this Mac. Notarization still needs a team.
+  CODE_SIGN_STYLE: Manual
+  CODE_SIGN_IDENTITY: "-"
+  DEVELOPMENT_TEAM: ""
+  CODE_SIGNING_REQUIRED: YES
+  CODE_SIGNING_ALLOWED: YES
   ENABLE_HARDENED_RUNTIME: YES
 targets:
   DiskLens:
@@ -25,6 +32,8 @@ targets:
         embed: false
     settings:
       base:
+        PRODUCT_NAME: DiskLens
+        PRODUCT_MODULE_NAME: DiskLens
         PRODUCT_BUNDLE_IDENTIFIER: com.disklens.DiskLens
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: DiskLens/Info.plist
@@ -32,8 +41,6 @@ targets:
         ENABLE_HARDENED_RUNTIME: YES
         COMBINE_HIDPI_IMAGES: YES
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
-    info:
-      path: DiskLens/Info.plist
   DiskLensStore:
     type: application
     platform: macOS
@@ -55,8 +62,6 @@ targets:
         COMBINE_HIDPI_IMAGES: YES
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISKLENS_SANDBOX
-    info:
-      path: DiskLens/Info.plist
   DiskLensTests:
     type: bundle.unit-test
     platform: macOS
@@ -70,6 +75,22 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.disklens.DiskLensTests
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/DiskLens.app/Contents/MacOS/DiskLens"
         BUNDLE_LOADER: "$(TEST_HOST)"
+        SWIFT_VERSION: "5.0"
+  DiskLensStoreTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: DiskLensTests
+    dependencies:
+      - target: DiskLensStore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.disklens.DiskLensStoreTests
+        PRODUCT_MODULE_NAME: DiskLensStoreTests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/DiskLensStore.app/Contents/MacOS/DiskLensStore"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISKLENS_SANDBOX
         SWIFT_VERSION: "5.0"
 schemes:
   DiskLens:
@@ -86,5 +107,9 @@ schemes:
     build:
       targets:
         DiskLensStore: all
+        DiskLensStoreTests: [test]
+    test:
+      targets:
+        - DiskLensStoreTests
     run:
       config: Debug

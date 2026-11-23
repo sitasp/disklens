@@ -46,6 +46,11 @@ if ! command -v xcodebuild >/dev/null 2>&1; then
   exit 1
 fi
 
+# Match the Swift app's deployment target. Without this, crates that compile
+# C (blake3) take the host SDK version and the link warns that those objects
+# were built for a newer macOS than the app.
+export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-14.0}"
+
 rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
 cargo build --release -p diskscan --target aarch64-apple-darwin
@@ -63,11 +68,21 @@ cp "$GENERATED/diskscanFFI.h" "$HEADERS/diskscanFFI.h"
 # xcodebuild looks for module.modulemap inside the headers directory.
 cp "$GENERATED/diskscanFFI.modulemap" "$HEADERS/module.modulemap"
 
+# macOS arm64 and x86_64 are one platform. Current Xcode rejects an
+# XCFramework that lists them as two libraries ("equivalent library
+# definitions") and wants a single universal binary instead.
+UNIVERSAL_DIR="$CORE/target/universal-apple-darwin/release"
+mkdir -p "$UNIVERSAL_DIR"
+UNIVERSAL="$UNIVERSAL_DIR/libdiskscan.a"
+lipo -create \
+  "$CORE/target/aarch64-apple-darwin/release/libdiskscan.a" \
+  "$CORE/target/x86_64-apple-darwin/release/libdiskscan.a" \
+  -output "$UNIVERSAL"
+
 XCFRAMEWORK="$VENDOR/DiskScanFFI.xcframework"
 rm -rf "$XCFRAMEWORK"
 xcodebuild -create-xcframework \
-  -library "$CORE/target/aarch64-apple-darwin/release/libdiskscan.a" -headers "$HEADERS" \
-  -library "$CORE/target/x86_64-apple-darwin/release/libdiskscan.a" -headers "$HEADERS" \
+  -library "$UNIVERSAL" -headers "$HEADERS" \
   -output "$XCFRAMEWORK"
 
 echo
