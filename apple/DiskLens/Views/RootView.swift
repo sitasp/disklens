@@ -6,15 +6,21 @@ struct RootView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $model.section) {
-                Section("Library") {
-                    ForEach(SidebarSection.allCases) { section in
-                        Label(section.title, systemImage: section.symbol)
-                            .tag(section)
-                    }
+                Section("Start") {
+                    sidebarRow(.overview)
+                }
+                Section("Look") {
+                    sidebarRow(.map)
+                    sidebarRow(.categories)
+                    sidebarRow(.largeFiles)
+                }
+                Section("Clean") {
+                    sidebarRow(.duplicates)
+                    sidebarRow(.history)
                 }
             }
             .listStyle(.sidebar)
-            .navigationSplitViewColumnWidth(min: 196, ideal: 216, max: 260)
+            .navigationSplitViewColumnWidth(min: 210, ideal: 236, max: 280)
             .navigationTitle("DiskLens")
         } detail: {
             detail
@@ -42,6 +48,13 @@ struct RootView: View {
             }
             model.openInitialPathIfPresent()
         }
+    }
+
+    private func sidebarRow(_ section: SidebarSection) -> some View {
+        Label(section.title, systemImage: section.symbol)
+            .font(.title3)
+            .padding(.vertical, 2)
+            .tag(section)
     }
 
     @ViewBuilder

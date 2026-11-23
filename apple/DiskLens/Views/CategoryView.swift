@@ -33,17 +33,18 @@ struct CategoryView: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Unique bytes by kind of file. A JavaScript file inside node_modules counts as a developer cache, not as code. Files inside an app bundle count as the app.")
-                    .font(.callout)
+                    .font(.title3)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 ForEach(model.categories, id: \.category) { row in
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            CategorySwatch(category: row.category)
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 14) {
+                            CategoryMark(category: row.category)
                             Text(row.label)
-                                .font(.headline)
+                                .font(.title2.weight(.semibold))
                             Spacer()
                             ByteText(bytes: row.uniqueApparent, emphasis: true)
+                                .font(.title2)
                         }
                         GeometryReader { geo in
                             let fraction = peak > 0 ? CGFloat(row.uniqueApparent) / CGFloat(peak) : 0
@@ -56,7 +57,7 @@ struct CategoryView: View {
                         }
                         .frame(height: 10)
                         Text("\(row.fileCount) files · \(formatByteCount(bytes: row.uniqueAllocated)) allocated")
-                            .font(.caption)
+                            .font(.title3)
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                     }

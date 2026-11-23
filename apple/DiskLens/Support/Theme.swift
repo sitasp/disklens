@@ -41,7 +41,7 @@ enum SidebarSection: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .overview: return "Overview"
+        case .overview: return "Dashboard"
         case .map: return "Disk Map"
         case .categories: return "Categories"
         case .largeFiles: return "Large Files"
@@ -52,13 +52,44 @@ enum SidebarSection: String, CaseIterable, Identifiable, Hashable {
 
     var symbol: String {
         switch self {
-        case .overview: return "internaldrive"
-        case .map: return "circle.hexagongrid"
-        case .categories: return "square.grid.2x2"
-        case .largeFiles: return "doc.text.magnifyingglass"
-        case .duplicates: return "square.on.square"
+        case .overview: return "square.grid.2x2.fill"
+        case .map: return "chart.pie.fill"
+        case .categories: return "square.stack.3d.up.fill"
+        case .largeFiles: return "doc.fill"
+        case .duplicates: return "square.on.square.fill"
         case .history: return "clock.arrow.circlepath"
         }
+    }
+}
+
+extension FileCategory {
+    var symbol: String {
+        switch self {
+        case .application: return "square.stack.3d.up.fill"
+        case .audio: return "waveform"
+        case .video: return "film.fill"
+        case .image: return "photo.fill"
+        case .document: return "doc.richtext.fill"
+        case .archive: return "archivebox.fill"
+        case .code: return "chevron.left.forwardslash.chevron.right"
+        case .developerCache: return "shippingbox.fill"
+        case .system: return "gearshape.fill"
+        case .other: return "square.dashed"
+        }
+    }
+}
+
+enum DashboardVolumes {
+    /// The disk the dashboard leads with: a fixed volume that reported usage,
+    /// otherwise any volume that reported usage, otherwise the first card.
+    static func featured(_ volumes: [VolumeInfo]) -> VolumeInfo? {
+        if let fixed = volumes.first(where: { !$0.removable && $0.usage != nil }) {
+            return fixed
+        }
+        if let measured = volumes.first(where: { $0.usage != nil }) {
+            return measured
+        }
+        return volumes.first
     }
 }
 

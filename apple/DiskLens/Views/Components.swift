@@ -40,24 +40,29 @@ struct EmptyState: View {
     var action: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 18) {
             Image(systemName: symbol)
-                .font(.system(size: 36, weight: .light))
+                .font(.system(size: 34, weight: .semibold))
                 .foregroundStyle(Palette.accent)
+                .frame(width: 84, height: 84)
+                .background(Palette.accent.opacity(0.16), in: Circle())
             Text(title)
-                .font(.title3.weight(.semibold))
+                .font(.largeTitle.weight(.semibold))
+                .multilineTextAlignment(.center)
             Text(message)
-                .font(.callout)
+                .font(.title3)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .frame(maxWidth: 420)
+                .frame(maxWidth: 560)
             if let actionTitle, let action {
                 Button(actionTitle, action: action)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
                     .keyboardShortcut(.defaultAction)
-                    .padding(.top, 4)
+                    .padding(.top, 8)
             }
         }
-        .padding(32)
+        .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
@@ -67,7 +72,21 @@ struct CategorySwatch: View {
     var body: some View {
         Circle()
             .fill(Palette.color(for: category))
-            .frame(width: 8, height: 8)
+            .frame(width: 10, height: 10)
+            .accessibilityHidden(true)
+    }
+}
+
+struct CategoryMark: View {
+    var category: FileCategory
+    var size: CGFloat = 44
+
+    var body: some View {
+        Image(systemName: category.symbol)
+            .font(.system(size: size * 0.38, weight: .semibold))
+            .foregroundStyle(Palette.color(for: category))
+            .frame(width: size, height: size)
+            .background(Palette.color(for: category).opacity(0.18), in: Circle())
             .accessibilityHidden(true)
     }
 }

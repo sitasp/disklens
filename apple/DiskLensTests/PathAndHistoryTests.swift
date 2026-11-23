@@ -18,6 +18,17 @@ final class PathAndHistoryTests: XCTestCase {
         XCTAssertNil(DiskPaths.parent(root: "/Users/ada/Projects", current: "/Users/ada/Projects"))
     }
 
+    func testDashboardFeaturesTheFixedDisk() {
+        let usage = VolumeUsageRecord(totalBytes: 100, availableBytes: 40, freeBytes: 30, usedBytes: 60, blockSize: 4096)
+        let removable = VolumeInfo(name: "Stick", path: "/Volumes/Stick", removable: true, usage: usage, error: nil)
+        let silent = VolumeInfo(name: "Empty", path: "/Volumes/Empty", removable: false, usage: nil, error: nil)
+        let mac = VolumeInfo(name: "Macintosh HD", path: "/", removable: false, usage: usage, error: nil)
+        XCTAssertEqual(DashboardVolumes.featured([removable, silent, mac])?.path, "/")
+        XCTAssertEqual(DashboardVolumes.featured([removable, silent])?.path, "/Volumes/Stick")
+        XCTAssertEqual(DashboardVolumes.featured([silent])?.path, "/Volumes/Empty")
+        XCTAssertNil(DashboardVolumes.featured([]))
+    }
+
     func testBroadSystemLocationsAreExact() {
         XCTAssertTrue(DiskPaths.isBroadSystemLocation("/Applications"))
         XCTAssertTrue(DiskPaths.isBroadSystemLocation("/Applications/"))
