@@ -51,6 +51,13 @@ enum DiskPaths {
     }
 }
 
+enum ProtectedRemovalGate {
+    /// Protected items stay in the plan, and deletion waits until this is true.
+    static func allowsDeletion(hasProtectedItems: Bool, acknowledged: Bool) -> Bool {
+        !hasProtectedItems || acknowledged
+    }
+}
+
 enum PermanentDeleteGate {
     /// The review screen requires this exact word before a permanent delete.
     static let phrase = "DELETE"

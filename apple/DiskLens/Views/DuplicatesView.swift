@@ -127,12 +127,17 @@ struct DuplicatesView: View {
                             "",
                             isOn: Binding(
                                 get: { file.selectedForRemoval },
-                                set: { _ in model.toggleDuplicate(group: index, file: fileIndex) }
+                                set: { selected in
+                                    model.requestDuplicateSelection(
+                                        group: index,
+                                        file: fileIndex,
+                                        select: selected
+                                    )
+                                }
                             )
                         )
                         .labelsHidden()
-                        .disabled(file.protected)
-                        .accessibilityLabel(file.selectedForRemoval ? "Selected for removal" : "Keep")
+                        .accessibilityLabel(file.protected ? "Protected file" : (file.selectedForRemoval ? "Selected for removal" : "Keep"))
                         VStack(alignment: .leading, spacing: 2) {
                             HStack {
                                 Text(URL(fileURLWithPath: file.path).lastPathComponent)

@@ -27,6 +27,15 @@ struct RootView: View {
         .sheet(item: reviewBinding) { plan in
             ReviewSheet(model: model, plan: plan)
         }
+        .alert(
+            model.protectedPrompt?.title ?? "Protected location",
+            isPresented: protectedPromptPresented
+        ) {
+            Button("Select Anyway") { model.confirmProtectedPrompt() }
+            Button("Leave It", role: .cancel) { model.protectedPrompt = nil }
+        } message: {
+            Text(model.protectedPrompt?.message ?? "")
+        }
         .task {
             if model.volumes.isEmpty {
                 model.refreshVolumes()
@@ -80,6 +89,13 @@ struct RootView: View {
                 .accessibilityLabel("Stop duplicate search")
             }
         }
+    }
+
+    private var protectedPromptPresented: Binding<Bool> {
+        Binding(
+            get: { model.protectedPrompt != nil },
+            set: { if !$0 { model.protectedPrompt = nil } }
+        )
     }
 
     private var reviewBinding: Binding<DeletionPlanRecord?> {

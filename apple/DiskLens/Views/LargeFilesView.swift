@@ -53,7 +53,7 @@ struct LargeFilesView: View {
                     action: nil
                 )
             } else {
-                Table(model.largeFiles, selection: $model.selectedLargePaths) {
+                Table(model.largeFiles, selection: largeSelection) {
                     TableColumn("Name") { file in
                         HStack(spacing: 6) {
                             CategorySwatch(category: file.category)
@@ -95,6 +95,13 @@ struct LargeFilesView: View {
                 }
             }
         }
+    }
+
+    private var largeSelection: Binding<Set<String>> {
+        Binding(
+            get: { model.selectedLargePaths },
+            set: { model.proposeLargeFileSelection($0) }
+        )
     }
 
     private func modified(_ ms: Int64?) -> String {

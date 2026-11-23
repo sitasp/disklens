@@ -37,21 +37,47 @@ pub struct DeletionEntry {
 pub struct DeletionPlan {
     pub entries: Vec<DeletionEntry>,
     /// Paths that will not be touched, with the reason.
+    ///
+    /// A protected path lands here only when the caller did not explicitly
+    /// include protected items. An explicit selection is flagged on the entry
+    /// instead, so the review can show it again.
     pub skipped: Vec<ScanIssue>,
     /// Bytes deleting every entry would free.
     pub reclaimable_bytes: u64,
 }
 
+impl DeletionPlan {
+    /// Entries the user chose that sit in a protected location.
+    #[must_use]
+    pub fn protected_entries(&self) -> Vec<&DeletionEntry> {
+        self.entries.iter().filter(|entry| entry.protected).collect()
+    }
+
+    /// The review must ask again before these items are removed.
+    ///
+    /// Smart selection never marks protected paths. This is true only after
+    /// someone explicitly included one.
+    #[must_use]
+    pub fn requires_protected_confirmation(&self) -> bool {
+        self.entries.iter().any(|entry| entry.protected)
+    }
+}
+
 /// Build a review plan for `paths`.
 ///
-/// Protected paths are skipped unless `allow_protected` is set. When they are
-/// allowed, `protected` stays true so the interface can ask a second time.
+/// When `include_protected` is false, protected paths are recorded in
+/// [`DeletionPlan::skipped`] and left out of the removable entries. That is
+/// the automatic path. When it is true, the caller has explicitly selected
+/// those paths: they stay in `entries` with [`DeletionEntry::protected`] set
+/// and a [`DeletionEntry::protection_reason`], and
+/// [`DeletionPlan::requires_protected_confirmation`] is true.
+///
 /// Missing paths are skipped. This function never deletes.
 #[must_use]
 pub fn plan_deletion(
     paths: &[impl AsRef<Path>],
     policy: &SelectionPolicy,
-    allow_protected: bool,
+    include_protected: bool,
 ) -> DeletionPlan {
     let mut entries = Vec::new();
     let mut skipped = Vec::new();
@@ -59,7 +85,7 @@ pub fn plan_deletion(
     for path in paths {
         let path = path.as_ref();
         if let Some(reason) = protection_reason(path, policy) {
-            if !allow_protected {
+            if !include_protected {
                 skipped.push(ScanIssue { path: path.display().to_string(), message: reason });
                 continue;
             }

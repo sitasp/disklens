@@ -14,31 +14,20 @@ struct ReviewSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             List {
-                ForEach(plan.entries, id: \.path) { entry in
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack {
-                            Text(URL(fileURLWithPath: entry.path).lastPathComponent)
-                            if entry.protected {
-                                Text("Protected")
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundStyle(.orange)
-                            }
-                            Spacer()
-                            ByteText(bytes: entry.apparentSize)
-                        }
-                        Text(entry.path)
+                if !protectedEntries.isEmpty {
+                    Section("Protected locations") {
+                        Text("Smart selection skips these. You selected them, so they are listed again. Nothing here is removed unless you confirm this list.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                        if let note = entry.note {
-                            Text(note)
-                                .font(.caption)
-                                .foregroundStyle(.orange)
+                        ForEach(protectedEntries, id: \.path) { entry in
+                            entryRow(entry)
                         }
-                        if let reason = entry.protectionReason {
-                            Text(reason)
-                                .font(.caption)
-                                .foregroundStyle(.orange)
+                    }
+                }
+                if !ordinaryEntries.isEmpty {
+                    Section(protectedEntries.isEmpty ? "Items" : "Other items") {
+                        ForEach(ordinaryEntries, id: \.path) { entry in
+                            entryRow(entry)
                         }
                     }
                 }
@@ -56,6 +45,11 @@ struct ReviewSheet: View {
                 }
             }
             .frame(minHeight: 220)
+
+            if !protectedEntries.isEmpty {
+                Toggle("Remove these protected items", isOn: $model.acknowledgeProtectedRemoval)
+                    .accessibilityHint("Required before a review that includes protected locations can proceed.")
+            }
 
             Toggle("Delete permanently instead of using the Trash", isOn: $model.reviewPermanent)
                 .accessibilityHint("Permanent deletion cannot be undone from History.")
@@ -80,15 +74,61 @@ struct ReviewSheet: View {
                 if model.reviewPermanent {
                     Button("Delete Permanently") { model.confirmPermanentDelete() }
                         .keyboardShortcut(.defaultAction)
-                        .disabled(!PermanentDeleteGate.accepts(model.reviewPhrase) || plan.entries.isEmpty)
+                        .disabled(!canProceed || !PermanentDeleteGate.accepts(model.reviewPhrase))
                 } else {
                     Button("Move to Trash") { model.confirmMoveToTrash() }
                         .keyboardShortcut(.defaultAction)
-                        .disabled(plan.entries.isEmpty)
+                        .disabled(!canProceed)
                 }
             }
         }
         .padding(20)
         .frame(width: 640, height: 560)
+    }
+
+    private var protectedEntries: [DeletionEntryRecord] {
+        plan.entries.filter(\.protected)
+    }
+
+    private var ordinaryEntries: [DeletionEntryRecord] {
+        plan.entries.filter { !$0.protected }
+    }
+
+    private var canProceed: Bool {
+        ProtectedRemovalGate.allowsDeletion(
+            hasProtectedItems: !protectedEntries.isEmpty,
+            acknowledged: model.acknowledgeProtectedRemoval
+        ) && !plan.entries.isEmpty
+    }
+
+    private func entryRow(_ entry: DeletionEntryRecord) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(URL(fileURLWithPath: entry.path).lastPathComponent)
+                if entry.protected {
+                    Text("Protected")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.orange)
+                }
+                Spacer()
+                ByteText(bytes: entry.apparentSize)
+            }
+            Text(entry.path)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            if let note = entry.note {
+                Text(note)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+            if let reason = entry.protectionReason {
+                Text(reason)
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(entry.protected ? "Protected \(entry.path). \(entry.protectionReason ?? "")" : entry.path)
     }
 }

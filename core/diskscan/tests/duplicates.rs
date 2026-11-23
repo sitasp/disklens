@@ -214,6 +214,8 @@ fn deletion_of_two_real_copies_reclaims_one_allocation_each() {
     write_file(&right, &[1u8; 32]);
     let plan = plan_deletion(&[left, right], &SelectionPolicy::default(), false);
     assert_eq!(plan.entries.len(), 2);
+    assert!(!plan.requires_protected_confirmation());
+    assert!(plan.protected_entries().is_empty());
     let single = plan_deletion(&[dir.path().join("left.txt")], &SelectionPolicy::default(), false);
     assert!(plan.reclaimable_bytes > single.reclaimable_bytes);
     assert!(plan.reclaimable_bytes >= 64 || plan.reclaimable_bytes % 512 == 0);
@@ -253,4 +255,42 @@ fn smart_selection_on_real_mtimes() {
     let oldest = SelectionPolicy { strategy: KeepStrategy::Oldest, ..SelectionPolicy::default() };
     let decision = diskscan::select_group(&report.groups[0], &oldest);
     assert!(decision.files.iter().any(|file| file.keeper && file.path.ends_with("older.txt")));
+}
+
+#[test]
+fn explicit_protected_selection_is_flagged_not_dropped() {
+    let dir = tempfile::tempdir().unwrap();
+    let vault = dir.path().join("vault");
+    let ordinary = dir.path().join("notes.txt");
+    write_file(&vault.join("secret.txt"), b"do-not-hide");
+    write_file(&ordinary, b"plain");
+    let policy = SelectionPolicy {
+        protect_system: false,
+        protect_library: false,
+        protect_packages: false,
+        extra_protected_prefixes: vec![vault.clone()],
+        ..SelectionPolicy::default()
+    };
+
+    let hidden = plan_deletion(&[vault.join("secret.txt")], &policy, false);
+    assert!(hidden.entries.is_empty());
+    assert!(!hidden.requires_protected_confirmation());
+    assert!(hidden.skipped.iter().any(|issue| issue.message.contains("inside")));
+
+    let secret = vault.join("secret.txt");
+    let shown = plan_deletion(&[secret.as_path(), ordinary.as_path()], &policy, true);
+    assert_eq!(shown.entries.len(), 2);
+    assert!(shown.requires_protected_confirmation());
+    let flagged = shown.protected_entries();
+    assert_eq!(flagged.len(), 1);
+    assert!(flagged[0].path.ends_with("secret.txt"));
+    assert!(flagged[0].protected);
+    let reason = flagged[0].protection_reason.as_deref().unwrap_or("");
+    assert!(reason.contains("inside"), "{reason}");
+    assert!(shown
+        .entries
+        .iter()
+        .any(|entry| entry.path.ends_with("notes.txt") && !entry.protected));
+    assert!(!shown.skipped.iter().any(|issue| issue.path.contains("secret.txt")));
+    assert!(shown.reclaimable_bytes > 0);
 }

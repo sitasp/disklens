@@ -438,6 +438,11 @@ RustBuffer uniffi_diskscan_fn_func_default_selection_policy(RustCallStatus *_Non
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_DISKSCAN_FN_FUNC_EXPLAIN_PROTECTION
+#define UNIFFI_FFIDEF_UNIFFI_DISKSCAN_FN_FUNC_EXPLAIN_PROTECTION
+RustBuffer uniffi_diskscan_fn_func_explain_protection(RustBuffer path, RustBuffer policy, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_DISKSCAN_FN_FUNC_FIND_DUPLICATE_FILES
 #define UNIFFI_FFIDEF_UNIFFI_DISKSCAN_FN_FUNC_FIND_DUPLICATE_FILES
 uint64_t uniffi_diskscan_fn_func_find_duplicate_files(RustBuffer path, RustBuffer options, RustBuffer cancel, RustBuffer progress, RustCallStatus *_Nonnull out_status
@@ -450,7 +455,7 @@ RustBuffer uniffi_diskscan_fn_func_format_byte_count(uint64_t bytes, RustCallSta
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_DISKSCAN_FN_FUNC_REVIEW_DELETION
 #define UNIFFI_FFIDEF_UNIFFI_DISKSCAN_FN_FUNC_REVIEW_DELETION
-RustBuffer uniffi_diskscan_fn_func_review_deletion(RustBuffer paths, RustBuffer policy, int8_t allow_protected, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_diskscan_fn_func_review_deletion(RustBuffer paths, RustBuffer policy, int8_t include_protected, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_DISKSCAN_FN_FUNC_SCAN_FOLDER
@@ -738,6 +743,12 @@ uint16_t uniffi_diskscan_checksum_func_default_scan_options(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_DISKSCAN_CHECKSUM_FUNC_DEFAULT_SELECTION_POLICY
 #define UNIFFI_FFIDEF_UNIFFI_DISKSCAN_CHECKSUM_FUNC_DEFAULT_SELECTION_POLICY
 uint16_t uniffi_diskscan_checksum_func_default_selection_policy(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_DISKSCAN_CHECKSUM_FUNC_EXPLAIN_PROTECTION
+#define UNIFFI_FFIDEF_UNIFFI_DISKSCAN_CHECKSUM_FUNC_EXPLAIN_PROTECTION
+uint16_t uniffi_diskscan_checksum_func_explain_protection(void
     
 );
 #endif

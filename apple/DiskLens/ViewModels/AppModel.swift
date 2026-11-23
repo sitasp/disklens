@@ -2,6 +2,12 @@ import AppKit
 import Foundation
 import Observation
 
+struct ProtectedPrompt {
+    var title: String
+    var message: String
+    var confirm: () -> Void
+}
+
 enum Activity: Equatable {
     case idle
     case running
@@ -117,6 +123,8 @@ final class AppModel {
     var reviewPermanent = false
     var reviewPhrase = ""
     var reviewError: String?
+    var acknowledgeProtectedRemoval = false
+    var protectedPrompt: ProtectedPrompt?
     var showOnboarding: Bool
 
     private var scanCancel: CancelFlag?
@@ -365,11 +373,58 @@ final class AppModel {
         decisions = Array(fresh.prefix(groups.count))
     }
 
-    func toggleDuplicate(group: Int, file: Int) {
+    func requestDuplicateSelection(group: Int, file: Int, select: Bool) {
         guard decisions.indices.contains(group), decisions[group].files.indices.contains(file) else { return }
-        if decisions[group].files[file].protected { return }
-        decisions[group].files[file].selectedForRemoval.toggle()
-        if decisions[group].files[file].selectedForRemoval {
+        let item = decisions[group].files[file]
+        if select && item.protected && !item.selectedForRemoval {
+            let reason = item.protectionReason ?? "It is in a protected location."
+            let name = DiskPaths.displayName(item.path)
+            protectedPrompt = ProtectedPrompt(
+                title: "This file is protected",
+                message: "\(name) is protected: \(reason) Smart selection leaves it alone. You can still select it. The review screen lists protected items again and asks you to confirm before anything is removed.",
+                confirm: { [weak self] in
+                    self?.setDuplicateSelected(group: group, file: file, selected: true)
+                }
+            )
+            return
+        }
+        setDuplicateSelected(group: group, file: file, selected: select)
+    }
+
+    func proposeLargeFileSelection(_ proposed: Set<String>) {
+        let added = proposed.subtracting(selectedLargePaths)
+        var blocked: [(path: String, reason: String)] = []
+        for path in added.sorted() {
+            if let reason = explainProtection(path: path, policy: settings.policy()) {
+                blocked.append((path, reason))
+            }
+        }
+        if blocked.isEmpty {
+            selectedLargePaths = proposed
+            return
+        }
+        selectedLargePaths = proposed.subtracting(Set(blocked.map(\.path)))
+        let details = blocked.map { "\(DiskPaths.displayName($0.path)): \($0.reason)" }.joined(separator: "\n")
+        let count = blocked.count
+        protectedPrompt = ProtectedPrompt(
+            title: count == 1 ? "This file is protected" : "These files are protected",
+            message: "\(details)\n\nSmart selection leaves protected locations alone. You can still select \(count == 1 ? "this file" : "these files"). The review screen lists them again and asks you to confirm before anything is removed.",
+            confirm: { [weak self] in
+                self?.selectedLargePaths.formUnion(blocked.map(\.path))
+            }
+        )
+    }
+
+    func confirmProtectedPrompt() {
+        let action = protectedPrompt?.confirm
+        protectedPrompt = nil
+        action?()
+    }
+
+    func setDuplicateSelected(group: Int, file: Int, selected: Bool) {
+        guard decisions.indices.contains(group), decisions[group].files.indices.contains(file) else { return }
+        decisions[group].files[file].selectedForRemoval = selected
+        if selected {
             decisions[group].files[file].keeper = false
         }
     }
@@ -383,10 +438,11 @@ final class AppModel {
     func reviewPaths(_ paths: [String]) {
         let unique = Array(Set(paths)).sorted()
         guard !unique.isEmpty else { return }
-        review = reviewDeletion(paths: unique, policy: settings.policy(), allowProtected: false)
+        review = reviewDeletion(paths: unique, policy: settings.policy(), includeProtected: true)
         reviewPermanent = false
         reviewPhrase = ""
         reviewError = nil
+        acknowledgeProtectedRemoval = false
     }
 
     func confirmMoveToTrash() {

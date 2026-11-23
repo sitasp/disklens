@@ -3950,6 +3950,21 @@ public func defaultSelectionPolicy() -> SelectionPolicyRecord  {
 })
 }
 /**
+ * Why `path` is protected, if it is.
+ *
+ * Smart selection uses the same check. The app calls this when someone
+ * selects a protected file by hand, so the confirmation can quote the reason.
+ */
+public func explainProtection(path: String, policy: SelectionPolicyRecord) -> String?  {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+        uniffiCallStatus in
+    uniffi_diskscan_fn_func_explain_protection(
+        FfiConverterString.lower(path),
+        FfiConverterTypeSelectionPolicyRecord_lower(policy),uniffiCallStatus
+    )
+})
+}
+/**
  * Scan `path` and hash duplicate candidates.
  *
  * # Errors
@@ -3980,14 +3995,17 @@ public func formatByteCount(bytes: UInt64) -> String  {
 }
 /**
  * Review a deletion. Does not remove anything.
+ *
+ * `include_protected` keeps explicitly chosen protected paths in the plan and
+ * flags them. `false` records those paths as skipped instead.
  */
-public func reviewDeletion(paths: [String], policy: SelectionPolicyRecord, allowProtected: Bool) -> DeletionPlanRecord  {
+public func reviewDeletion(paths: [String], policy: SelectionPolicyRecord, includeProtected: Bool) -> DeletionPlanRecord  {
     return try!  FfiConverterTypeDeletionPlanRecord_lift(try! rustCall() {
         uniffiCallStatus in
     uniffi_diskscan_fn_func_review_deletion(
         FfiConverterSequenceString.lower(paths),
         FfiConverterTypeSelectionPolicyRecord_lower(policy),
-        FfiConverterBool.lower(allowProtected),uniffiCallStatus
+        FfiConverterBool.lower(includeProtected),uniffiCallStatus
     )
 })
 }
@@ -4050,13 +4068,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_diskscan_checksum_func_default_selection_policy() != 29306) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_diskscan_checksum_func_explain_protection() != 31603) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_diskscan_checksum_func_find_duplicate_files() != 17841) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_diskscan_checksum_func_format_byte_count() != 58983) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_diskscan_checksum_func_review_deletion() != 44914) {
+    if (uniffi_diskscan_checksum_func_review_deletion() != 15308) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_diskscan_checksum_func_scan_folder() != 52297) {

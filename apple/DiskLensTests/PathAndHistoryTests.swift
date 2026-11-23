@@ -19,6 +19,12 @@ final class PathAndHistoryTests: XCTestCase {
         XCTAssertEqual(DiskPaths.displayName("/tmp/photos"), "photos")
     }
 
+    func testProtectedRemovalWaitsForAcknowledgement() {
+        XCTAssertTrue(ProtectedRemovalGate.allowsDeletion(hasProtectedItems: false, acknowledged: false))
+        XCTAssertFalse(ProtectedRemovalGate.allowsDeletion(hasProtectedItems: true, acknowledged: false))
+        XCTAssertTrue(ProtectedRemovalGate.allowsDeletion(hasProtectedItems: true, acknowledged: true))
+    }
+
     func testPermanentDeleteRequiresTheExactWord() {
         XCTAssertTrue(PermanentDeleteGate.accepts("DELETE"))
         XCTAssertTrue(PermanentDeleteGate.accepts("  DELETE\n"))

@@ -491,16 +491,29 @@ pub fn format_byte_count(bytes: u64) -> String {
     format_bytes(bytes)
 }
 
+/// Why `path` is protected, if it is.
+///
+/// Smart selection uses the same check. The app calls this when someone
+/// selects a protected file by hand, so the confirmation can quote the reason.
+#[uniffi::export]
+#[must_use]
+pub fn explain_protection(path: String, policy: SelectionPolicyRecord) -> Option<String> {
+    crate::selection::protection_reason(std::path::Path::new(&path), &policy_from_record(policy))
+}
+
 /// Review a deletion. Does not remove anything.
+///
+/// `include_protected` keeps explicitly chosen protected paths in the plan and
+/// flags them. `false` records those paths as skipped instead.
 #[uniffi::export]
 #[must_use]
 pub fn review_deletion(
     paths: Vec<String>,
     policy: SelectionPolicyRecord,
-    allow_protected: bool,
+    include_protected: bool,
 ) -> DeletionPlanRecord {
     let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
-    let plan = plan_deletion(&paths, &policy_from_record(policy), allow_protected);
+    let plan = plan_deletion(&paths, &policy_from_record(policy), include_protected);
     DeletionPlanRecord {
         reclaimable_bytes: plan.reclaimable_bytes,
         entries: plan
