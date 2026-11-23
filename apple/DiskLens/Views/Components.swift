@@ -72,13 +72,53 @@ struct CategorySwatch: View {
     }
 }
 
+/// Progress for a scan or a duplicate search. The column has a fixed width
+/// and the path keeps two lines, so changing counts and paths do not move
+/// the title or the Stop button.
+struct ScanActivityPanel: View {
+    var phase: ScanPhase?
+    var stats: String
+    var path: String
+    var stop: () -> Void
+    var stopLabel: String
+
+    var body: some View {
+        VStack(spacing: 14) {
+            ProgressView()
+                .controlSize(.large)
+            Text(phase.map(PhaseLabel.title(for:)) ?? "Starting")
+                .font(.headline)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+            Text(stats)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+            Text(path.isEmpty ? " " : path)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2, reservesSpace: true)
+                .truncationMode(.middle)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, alignment: .top)
+            Button("Stop", action: stop)
+                .accessibilityLabel(stopLabel)
+        }
+        .frame(width: 520)
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .transaction { $0.disablesAnimations = true }
+    }
+}
+
 struct PhaseLabel: View {
     var phase: ScanPhase
     var body: some View {
         Text(title)
     }
 
-    private var title: String {
+    fileprivate static func title(for phase: ScanPhase) -> String {
         switch phase {
         case .walking: return "Reading folders"
         case .finalizing: return "Adding up sizes"
@@ -87,5 +127,9 @@ struct PhaseLabel: View {
         case .hashingFull: return "Hashing full files"
         case .done: return "Finishing"
         }
+    }
+
+    private var title: String {
+        Self.title(for: phase)
     }
 }

@@ -46,32 +46,15 @@ struct MapView: View {
     }
 
     private var running: some View {
-        VStack(spacing: 14) {
-            ProgressView()
-                .controlSize(.large)
-            if let progress = model.scanProgress {
-                PhaseLabel(phase: progress.phase)
-                    .font(.headline)
-                Text("\(progress.filesSeen) entries · \(formatByteCount(bytes: progress.bytesSeen)) seen")
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-                Text(progress.currentPath)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .truncationMode(.middle)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 520)
-            } else {
-                Text("Starting the walk…")
-                    .foregroundStyle(.secondary)
-            }
-            Button("Stop") { model.cancelScan() }
-                .accessibilityLabel("Stop scan")
-        }
-        .padding(32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityElement(children: .combine)
+        ScanActivityPanel(
+            phase: model.scanProgress?.phase,
+            stats: model.scanProgress.map {
+                "\($0.filesSeen) entries · \(formatByteCount(bytes: $0.bytesSeen)) seen"
+            } ?? "Starting the walk…",
+            path: model.scanProgress?.currentPath ?? "",
+            stop: { model.cancelScan() },
+            stopLabel: "Stop scan"
+        )
     }
 
     private var mapped: some View {

@@ -50,32 +50,15 @@ struct DuplicatesView: View {
     }
 
     private var running: some View {
-        VStack(spacing: 14) {
-            ProgressView()
-                .controlSize(.large)
-            if let progress = model.duplicateProgress {
-                PhaseLabel(phase: progress.phase)
-                    .font(.headline)
-                Text("\(progress.filesSeen) candidates · \(progress.groupsFound) groups")
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-                if !progress.currentPath.isEmpty {
-                    Text(progress.currentPath)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .truncationMode(.middle)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: 520)
-                }
-            } else {
-                Text("Starting…")
-                    .foregroundStyle(.secondary)
-            }
-            Button("Stop") { model.cancelDuplicates() }
-                .accessibilityLabel("Stop duplicate search")
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ScanActivityPanel(
+            phase: model.duplicateProgress?.phase,
+            stats: model.duplicateProgress.map {
+                "\($0.filesSeen) candidates · \($0.groupsFound) groups"
+            } ?? "Starting…",
+            path: model.duplicateProgress?.currentPath ?? "",
+            stop: { model.cancelDuplicates() },
+            stopLabel: "Stop duplicate search"
+        )
     }
 
     private var results: some View {
