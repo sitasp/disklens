@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use crate::duplicates::{reclaimable_bytes, DuplicateFile, DuplicateGroup};
 
 /// Which copy should survive.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, uniffi::Enum)]
 pub enum KeepStrategy {
     /// Highest modification time. Missing timestamps lose to real ones.
     #[default]

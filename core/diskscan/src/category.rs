@@ -7,7 +7,7 @@
 use std::path::Path;
 
 /// Coarse kind of file, stable and exhaustive so the UI can color every node.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, uniffi::Enum)]
 pub enum FileCategory {
     Application,
     Audio,

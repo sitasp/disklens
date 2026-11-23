@@ -7,7 +7,7 @@
 use std::path::Path;
 
 /// Error returned when a scan cannot produce a tree.
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error, uniffi::Error)]
 pub enum ScanError {
     /// The caller cancelled the scan before it finished.
     #[error("scan cancelled")]

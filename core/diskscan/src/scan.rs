@@ -26,7 +26,7 @@ const PROGRESS_EVERY: u64 = 64;
 const PROGRESS_INTERVAL_MS: u128 = 200;
 
 /// Knobs for [`scan`].
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct ScanOptions {
     /// Descend through symbolic links. Off by default: a link is reported as
     /// a symlink leaf, cycles are impossible, and a linked tree is not counted

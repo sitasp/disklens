@@ -26,10 +26,13 @@
 #[cfg(not(unix))]
 compile_error!("diskscan supports Unix only (macOS and Linux)");
 
+uniffi::setup_scaffolding!();
+
 mod category;
 mod deletion;
 mod duplicates;
 mod error;
+mod ffi;
 mod format;
 mod identity;
 mod layout;

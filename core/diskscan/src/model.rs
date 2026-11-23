@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use crate::category::FileCategory;
 
 /// How a directory entry relates to the walk.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, uniffi::Enum)]
 pub enum NodeKind {
     Directory,
     File,
@@ -20,7 +20,7 @@ pub enum NodeKind {
 }
 
 /// Which byte measurement a view should display.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, uniffi::Enum)]
 pub enum SizeMetric {
     /// Apparent file length, counting each inode or clone group once.
     /// This is the default chart metric: it is stable across filesystems and
@@ -146,7 +146,7 @@ impl ScanTree {
 }
 
 /// How [`crate::query_files`] orders matches.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, uniffi::Enum)]
 pub enum FileSort {
     #[default]
     Largest,

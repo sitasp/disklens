@@ -28,7 +28,7 @@ const DOMAIN_PARTIAL: &[u8] = b"disklens-partial-v1";
 const DOMAIN_FULL: &[u8] = b"disklens-full-v1";
 
 /// Options for [`find_duplicates`].
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct DuplicateOptions {
     /// Files smaller than this are ignored. `1` drops empty files, which
     /// otherwise form one giant useless group.

@@ -10,7 +10,7 @@
 /// Walking and finalizing belong to the directory scan. Grouping and the two
 /// hashing phases belong to duplicate detection. One enum lets the UI bind a
 /// single progress view to either job.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum ScanPhase {
     /// Reading directory entries and file metadata.
     Walking,
@@ -27,7 +27,7 @@ pub enum ScanPhase {
 }
 
 /// A point-in-time snapshot safe to copy across threads.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct ProgressUpdate {
     pub phase: ScanPhase,
     /// Directory entries visited so far, including directories and symlinks.
