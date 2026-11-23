@@ -66,6 +66,10 @@ struct ReviewSheet: View {
                     .font(.caption)
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
+                if model.deletionAccessExpired {
+                    Button("Grant Access Again…") { model.grantDeletionAccess() }
+                        .accessibilityLabel("Grant folder access again")
+                }
             }
             HStack {
                 Button("Cancel") { model.review = nil }

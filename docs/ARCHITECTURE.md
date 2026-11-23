@@ -108,6 +108,8 @@ The user can still select a protected file by hand. The review screen is the sec
 
 `plan_deletion` does not delete. It stats each path, skips protected paths unless `allow_protected` is set, refuses to follow symlinks (removing a link must not be reported as removing the target), and expands directories with another scan. The plan's `reclaimable_bytes` uses the same hard-link rule as duplicates.
 
+`plan_deletion(..., include_protected: false)` records protected paths as skipped. The app calls it with `include_protected: true` after a manual selection, so those paths stay in the plan with `protected` and `protection_reason` set. The review lists them in their own section and will not proceed until that list is confirmed.
+
 The Swift app then either:
 
 - moves the approved paths to the Trash with `FileManager.trashItem`, recording the original path and the Trash URL, or
@@ -132,6 +134,6 @@ History is a JSON file in Application Support. Put Back moves a trashed URL to t
 
 ## App
 
-`apple/project.yml` is an XcodeGen spec. The target is unsandboxed, hardened runtime on, macOS 14, Swift 5 mode. Views call `AppModel`. `AppModel` calls UniFFI on a detached task and publishes summaries. Settings live in `UserDefaults`. The first launch explains Full Disk Access.
+`apple/project.yml` is an XcodeGen spec with two application targets. `DiskLens` is unsandboxed for direct distribution. `DiskLensStore` is sandboxed, compiled with `DISKLENS_SANDBOX`, and uses security-scoped bookmarks for every scan and deletion. Both are macOS 14, Swift 5, hardened runtime on. Views call `AppModel`. `AppModel` calls UniFFI on a detached task and publishes summaries. Settings live in `UserDefaults`. The first launch explains Full Disk Access, or folder bookmarks, depending on the target.
 
 See `docs/SANDBOX.md` for the entitlement choice.

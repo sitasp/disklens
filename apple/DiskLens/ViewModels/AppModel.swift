@@ -80,6 +80,7 @@ final class AppModel {
     var section: SidebarSection = .overview
     var settings: SettingsStore
     var history: HistoryStore
+    let folderAccess = FolderAccessStore()
     let quickLook = QuickLookPresenter()
 
     var volumes: [VolumeInfo] = []
@@ -124,6 +125,7 @@ final class AppModel {
     var reviewPhrase = ""
     var reviewError: String?
     var acknowledgeProtectedRemoval = false
+    var deletionAccessExpired = false
     var protectedPrompt: ProtectedPrompt?
     var showOnboarding: Bool
 
@@ -203,23 +205,49 @@ final class AppModel {
         volumes = next.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         volumesLoading = false
         if volumes.isEmpty {
-            volumesError = "No mounted volumes were visible. Grant Full Disk Access if disks you expect are missing."
+            volumesError = Distribution.isAppStore
+                ? "No volumes were visible inside the sandbox. Choose a folder to map it."
+                : "No mounted volumes were visible. Grant Full Disk Access if disks you expect are missing."
         }
     }
 
-    func chooseFolder(stayOnFilesystem: Bool) {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.prompt = "Scan"
-        panel.message = "Choose a folder or volume to map."
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        beginScan(path: url.path, stayOnFilesystem: stayOnFilesystem)
+    func chooseFolder(stayOnFilesystem: Bool, startingAt: String? = nil) {
+        guard let url = openFolderPanel(
+            prompt: "Scan",
+            message: Distribution.isAppStore
+                ? "Choose a folder. DiskLens remembers it so a later rescan does not ask again."
+                : "Choose a folder or volume to map.",
+            startingAt: startingAt
+        ) else { return }
+        if let problem = folderAccess.grantPickedFolder(url) {
+            scanActivity = .failed(problem)
+            section = .map
+            return
+        }
+        beginScan(path: url.path, stayOnFilesystem: stayOnFilesystem || Distribution.isAppStore)
         section = .map
     }
 
+    func chooseDuplicateFolder() {
+        guard let url = openFolderPanel(
+            prompt: "Compare",
+            message: Distribution.isAppStore
+                ? "Choose a folder to compare. Access is saved for the next search and for deletion."
+                : "Choose a folder to search for duplicate files.",
+            startingAt: nil
+        ) else { return }
+        if let problem = folderAccess.grantPickedFolder(url) {
+            duplicateActivity = .failed(problem)
+            return
+        }
+        beginDuplicates(path: url.path)
+    }
+
     func beginScan(path: String, stayOnFilesystem: Bool) {
+        if let problem = folderAccess.prepareToRead(path) {
+            scanActivity = .failed(problem)
+            return
+        }
         scanCancel?.cancel()
         scanGeneration += 1
         let generation = scanGeneration
@@ -314,6 +342,10 @@ final class AppModel {
     }
 
     func beginDuplicates(path: String) {
+        if let problem = folderAccess.prepareToRead(path) {
+            duplicateActivity = .failed(problem)
+            return
+        }
         duplicateCancel?.cancel()
         duplicateGeneration += 1
         let generation = duplicateGeneration
@@ -443,11 +475,39 @@ final class AppModel {
         reviewPhrase = ""
         reviewError = nil
         acknowledgeProtectedRemoval = false
+        deletionAccessExpired = false
+    }
+
+    func grantDeletionAccess() {
+        guard let url = openFolderPanel(
+            prompt: "Grant Access",
+            message: "Choose the folder that contains the items you want to remove.",
+            startingAt: nil
+        ) else { return }
+        if let problem = folderAccess.grantPickedFolder(url) {
+            reviewError = problem
+            deletionAccessExpired = true
+            return
+        }
+        guard let review else { return }
+        if let problem = folderAccess.prepareToDelete(review.entries.map(\.path)) {
+            reviewError = problem
+            deletionAccessExpired = true
+        } else {
+            reviewError = nil
+            deletionAccessExpired = false
+        }
     }
 
     func confirmMoveToTrash() {
         guard let review else { return }
         let paths = review.entries.map(\.path)
+        if let problem = folderAccess.prepareToDelete(paths) {
+            reviewError = problem
+            deletionAccessExpired = true
+            return
+        }
+        deletionAccessExpired = false
         let outcome = TrashService.moveToTrash(paths: paths)
         history.record(
             items: outcome.moved,
@@ -468,6 +528,12 @@ final class AppModel {
             return
         }
         let paths = review.entries.map(\.path)
+        if let problem = folderAccess.prepareToDelete(paths) {
+            reviewError = problem
+            deletionAccessExpired = true
+            return
+        }
+        deletionAccessExpired = false
         let outcome = TrashService.deletePermanently(paths: paths)
         history.record(
             items: outcome.removed,
@@ -500,6 +566,20 @@ final class AppModel {
 
     func quickLook(paths: [String]) {
         quickLook.present(paths: paths)
+    }
+
+    private func openFolderPanel(prompt: String, message: String, startingAt: String?) -> URL? {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = prompt
+        panel.message = message
+        if let startingAt {
+            panel.directoryURL = URL(fileURLWithPath: startingAt)
+        }
+        guard panel.runModal() == .OK else { return nil }
+        return panel.url
     }
 
     private var currentDuplicateSession: DuplicateSession?

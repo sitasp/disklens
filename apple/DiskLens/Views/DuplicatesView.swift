@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 struct DuplicatesView: View {
@@ -10,10 +9,10 @@ struct DuplicatesView: View {
             case .idle:
                 EmptyState(
                     title: "Find copies, keep one",
-                    message: "DiskLens groups files that are the same size, then the same at both ends, then the same all the way through. Hard links of a single file are not listed. Protected places are never checked for deletion.",
+                    message: "DiskLens groups files that are the same size, then the same at both ends, then the same all the way through. Hard links of a single file are not listed. Protected places are skipped by the smart rules; selecting one asks you to confirm, and the review asks again.",
                     symbol: "square.on.square",
                     actionTitle: "Choose Folder…",
-                    action: { chooseAndSearch() }
+                    action: { model.chooseDuplicateFolder() }
                 )
             case .running:
                 running
@@ -23,7 +22,7 @@ struct DuplicatesView: View {
                     message: message,
                     symbol: "exclamationmark.triangle",
                     actionTitle: "Try Again",
-                    action: { chooseAndSearch() }
+                    action: { model.chooseDuplicateFolder() }
                 )
             case .cancelled:
                 EmptyState(
@@ -31,7 +30,7 @@ struct DuplicatesView: View {
                     message: "No groups were kept. Start again to compare the folder.",
                     symbol: "stop.circle",
                     actionTitle: "Choose Folder…",
-                    action: { chooseAndSearch() }
+                    action: { model.chooseDuplicateFolder() }
                 )
             case .ready:
                 results
@@ -191,15 +190,5 @@ struct DuplicatesView: View {
             .font(.callout)
             .textCase(nil)
         }
-    }
-
-    private func chooseAndSearch() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.prompt = "Compare"
-        panel.message = "Choose a folder to search for duplicate files."
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        model.beginDuplicates(path: url.path)
     }
 }

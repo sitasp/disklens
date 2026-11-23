@@ -19,6 +19,20 @@ final class PathAndHistoryTests: XCTestCase {
         XCTAssertEqual(DiskPaths.displayName("/tmp/photos"), "photos")
     }
 
+    func testSavedFolderCoveringUsesAPathBoundary() {
+        let docs = StoredBookmark(id: UUID(), path: "/Users/ada/Documents", name: "Documents", bookmark: Data())
+        let other = StoredBookmark(id: UUID(), path: "/Users/ada/Documents-old", name: "Old", bookmark: Data())
+        let nested = StoredBookmark(id: UUID(), path: "/Users/ada/Documents/Taxes", name: "Taxes", bookmark: Data())
+        let match = FolderAccess.bestCovering(
+            path: "/Users/ada/Documents/Taxes/2024/return.pdf",
+            folders: [docs, other, nested]
+        )
+        XCTAssertEqual(match?.id, nested.id)
+        XCTAssertNil(FolderAccess.bestCovering(path: "/Users/ada/Desktop/photo.jpg", folders: [docs, other]))
+        XCTAssertFalse(FolderAccess.covers(root: "/Users/ada/Documents", path: "/Users/ada/Documents-old/file"))
+        XCTAssertTrue(FolderAccess.covers(root: "/Users/ada/Documents", path: "/Users/ada/Documents"))
+    }
+
     func testProtectedRemovalWaitsForAcknowledgement() {
         XCTAssertTrue(ProtectedRemovalGate.allowsDeletion(hasProtectedItems: false, acknowledged: false))
         XCTAssertFalse(ProtectedRemovalGate.allowsDeletion(hasProtectedItems: true, acknowledged: false))

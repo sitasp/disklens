@@ -41,7 +41,24 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Section("Full Disk Access") {
+            Section(Distribution.isAppStore ? "Saved folders" : "Full Disk Access") {
+                if Distribution.isAppStore {
+                    if model.folderAccess.folders.isEmpty {
+                        Text("Folders you scan are remembered here so DiskLens can open them again.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(model.folderAccess.folders) { folder in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(folder.name)
+                                Text(folder.path)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                        }
+                    }
+                }
                 Button("Show the access guide") { model.showOnboarding = true }
             }
         }

@@ -21,9 +21,13 @@ struct OverviewView: View {
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 16)], spacing: 16) {
                         ForEach(model.volumes) { volume in
-                            VolumeCard(volume: volume) {
-                                model.beginScan(path: volume.path, stayOnFilesystem: true)
-                                model.section = .map
+                            VolumeCard(volume: volume, sandboxed: Distribution.isAppStore) {
+                                if Distribution.isAppStore {
+                                    model.chooseFolder(stayOnFilesystem: true, startingAt: volume.path)
+                                } else {
+                                    model.beginScan(path: volume.path, stayOnFilesystem: true)
+                                    model.section = .map
+                                }
                             }
                         }
                     }
@@ -59,6 +63,7 @@ struct OverviewView: View {
 
 private struct VolumeCard: View {
     var volume: VolumeInfo
+    var sandboxed: Bool
     var scan: () -> Void
 
     var body: some View {
@@ -91,8 +96,8 @@ private struct VolumeCard: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Button("Scan this volume", action: scan)
-                .accessibilityLabel("Scan \(volume.name)")
+            Button(sandboxed ? "Choose a folder" : "Scan this volume", action: scan)
+                .accessibilityLabel(sandboxed ? "Choose a folder on \(volume.name)" : "Scan \(volume.name)")
         }
         .padding(16)
         .background(.background, in: RoundedRectangle(cornerRadius: 12, style: .continuous))

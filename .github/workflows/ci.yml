@@ -37,5 +37,7 @@ jobs:
         run: ./scripts/build-rust.sh
       - name: Generate the Xcode project
         run: ./scripts/generate-xcode.sh
-      - name: Build and test
+      - name: Build and test the direct app
         run: xcodebuild -project apple/DiskLens.xcodeproj -scheme DiskLens -destination 'platform=macOS' -quiet build test
+      - name: Build the sandboxed App Store app
+        run: xcodebuild -project apple/DiskLens.xcodeproj -scheme DiskLensStore -destination 'platform=macOS' -quiet build

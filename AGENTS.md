@@ -41,6 +41,8 @@ open apple/DiskLens.xcodeproj
 - Deletion planning does not delete. Trash and `removeItem` stay in Swift.
 - Cancellation returns `ScanError::Cancelled` and no partial tree.
 - Swift: macOS 14, Swift 5 language mode, `@Observable` view models, views that do not call `stat` themselves. Byte strings come from `formatByteCount`.
+- `DiskLens` is the unsandboxed target. `DiskLensStore` defines `DISKLENS_SANDBOX` and must keep using `NSOpenPanel` plus security-scoped bookmarks (`FolderAccessStore`). Do not let the store target scan a volume root directly.
+- Explicit deletion of a protected path sets `DeletionEntry.protected` and a reason. Do not drop those paths from the plan. The review must list them again and wait for `ProtectedRemovalGate`.
 - New filesystem behaviour needs a temp-dir test: symlinks, hard links, unreadable entries, and cancellation are the cases that have gone wrong before.
 
 ## Tests that must keep passing

@@ -34,6 +34,29 @@ targets:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
     info:
       path: DiskLens/Info.plist
+  DiskLensStore:
+    type: application
+    platform: macOS
+    sources:
+      - path: DiskLens
+      - path: Generated/diskscan.swift
+    dependencies:
+      - framework: Vendor/DiskScanFFI.xcframework
+        embed: false
+    settings:
+      base:
+        PRODUCT_NAME: DiskLensStore
+        PRODUCT_BUNDLE_IDENTIFIER: com.disklens.DiskLens
+        PRODUCT_MODULE_NAME: DiskLensStore
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: DiskLens/Info.plist
+        CODE_SIGN_ENTITLEMENTS: DiskLens/DiskLensStore.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        COMBINE_HIDPI_IMAGES: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISKLENS_SANDBOX
+    info:
+      path: DiskLens/Info.plist
   DiskLensTests:
     type: bundle.unit-test
     platform: macOS
@@ -57,5 +80,11 @@ schemes:
     test:
       targets:
         - DiskLensTests
+    run:
+      config: Debug
+  DiskLensStore:
+    build:
+      targets:
+        DiskLensStore: all
     run:
       config: Debug

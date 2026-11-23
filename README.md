@@ -25,7 +25,7 @@ A longer version of that picture, and the reason each size number exists, is in 
 - Read categories (photos, video, archives, developer caches, apps, system files).
 - Filter large and old files.
 - Find duplicates. Files are grouped by size, then by a hash of the first and last blocks, then by a full BLAKE3 hash. Hard links of one file are not reported as copies.
-- Apply a keep rule: newest, oldest, a preferred folder, the shortest path, or the name that does not look like a copy. System folders, Library, app bundles, and Photos libraries are never auto-selected.
+- Apply a keep rule: newest, oldest, a preferred folder, the shortest path, or the name that does not look like a copy. System folders, Library (including caches), app bundles, and Photos libraries are not auto-selected. If you select one of those yourself, DiskLens explains why it is protected and asks again on the review screen before it is removed.
 - Review the reclaim estimate, then move the selection to the Trash. Permanent delete requires typing `DELETE`. History can put Trash items back.
 
 ## Repository
@@ -81,12 +81,15 @@ The Swift app was written against the generated UniFFI bindings. It has **not** 
    open apple/DiskLens.xcodeproj
    ```
 
-4. In Xcode, select the DiskLens scheme and run. The first window explains Full Disk Access. You can scan a folder you pick without that permission. Grant Full Disk Access (System Settings → Privacy & Security → Full Disk Access, add DiskLens, quit and reopen) when you want protected folders included.
+4. In Xcode, run the **DiskLens** scheme for the direct, unsandboxed app. The first window explains Full Disk Access. You can scan a folder you pick without that permission. Grant Full Disk Access (System Settings → Privacy & Security → Full Disk Access, add DiskLens, quit and reopen) when you want protected folders included.
+
+   Run the **DiskLensStore** scheme for the sandboxed App Store build. It only reads folders you pick, saves a security-scoped bookmark for each one, and confirms that access again before a deletion. The product on disk is `DiskLensStore.app` so it does not overwrite the direct app. The bundle id is still `com.disklens.DiskLens`. See [docs/SANDBOX.md](docs/SANDBOX.md).
 
 5. To build and run the tests from the terminal:
 
    ```bash
    xcodebuild -project apple/DiskLens.xcodeproj -scheme DiskLens -destination 'platform=macOS' build test
+   xcodebuild -project apple/DiskLens.xcodeproj -scheme DiskLensStore -destination 'platform=macOS' build
    ```
 
 Signing uses Automatic signing and your Apple ID team. The app is not sandboxed; see [docs/SANDBOX.md](docs/SANDBOX.md) before you ship it.

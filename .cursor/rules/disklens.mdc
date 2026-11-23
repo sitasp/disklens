@@ -13,8 +13,9 @@ DiskLens is a macOS disk map. Rust in `core/` scans, hashes, and selects. SwiftU
 - Run `make test` and `make clippy` after Rust edits. Clippy is `-D warnings`.
 - Do not hand-edit `apple/Generated`. Run `scripts/build-rust.sh` and update Swift call sites to the generated names.
 - Keep three size fields: logical apparent, unique apparent, unique allocated. Hard links and APFS clone ids share a unique size.
-- Smart selection never auto-selects protected paths (`/System`, `Library`, app bundles, photo libraries). Add a unit test when that rule changes.
+- Smart selection never auto-selects protected paths (`/System`, `Library`, app bundles, photo libraries). An explicit selection stays in the deletion plan, flagged with a reason, and the review confirms that list again. Add a unit test when that rule changes.
 - `plan_deletion` must not delete. Trash and permanent delete stay in `TrashService.swift`. Permanent delete requires the word DELETE.
+- `DiskLensStore` is the sandboxed target (`DISKLENS_SANDBOX`) and uses security-scoped bookmarks. The direct `DiskLens` target stays unsandboxed.
 - Cancellation returns `ScanError::Cancelled` and no partial tree.
 - Do not commit `core/target`, the XCFramework, or the generated `.xcodeproj`.
 - Linux cannot build the Mac app. Say so instead of claiming the Swift target was compiled.

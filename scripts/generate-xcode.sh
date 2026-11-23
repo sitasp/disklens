@@ -18,4 +18,5 @@ fi
 
 cd "$ROOT/apple"
 xcodegen generate
-echo "Opened by: open \"$ROOT/apple/DiskLens.xcodeproj\""
+echo "Open with: open \"$ROOT/apple/DiskLens.xcodeproj\""
+echo "Schemes: DiskLens (direct), DiskLensStore (sandboxed App Store build)"
