@@ -132,3 +132,9 @@ Only do this if the link actually fails. The slice name is `macos-arm64_x86_64` 
 | SwiftUI app, both schemes, XCFramework | `xcodebuild` build and test for DiskLens and DiskLensStore on macOS 27 with Xcode 27.2, ad-hoc signed |
 
 Continuous integration (`.github/workflows/ci.yml`) runs the Rust suite on Linux and, on a macOS 14 runner, the Rust script plus `xcodebuild` build and test.
+
+## Support
+
+If DiskLens saves you a cleanup afternoon, you can buy me a coffee.
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/sitasp)
