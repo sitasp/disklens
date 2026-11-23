@@ -48,9 +48,11 @@ struct MapView: View {
     private var running: some View {
         ScanActivityPanel(
             phase: model.scanProgress?.phase,
-            stats: model.scanProgress.map {
-                "\($0.filesSeen) entries · \(formatByteCount(bytes: $0.bytesSeen)) seen"
-            } ?? "Starting the walk…",
+            waiting: "Starting the walk…",
+            count: model.scanProgress.map { String($0.filesSeen) } ?? "",
+            countLabel: " entries · ",
+            amount: model.scanProgress.map { formatByteCount(bytes: $0.bytesSeen) } ?? "",
+            amountLabel: " seen",
             path: model.scanProgress?.currentPath ?? "",
             stop: { model.cancelScan() },
             stopLabel: "Stop scan"

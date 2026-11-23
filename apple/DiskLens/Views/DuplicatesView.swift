@@ -52,9 +52,11 @@ struct DuplicatesView: View {
     private var running: some View {
         ScanActivityPanel(
             phase: model.duplicateProgress?.phase,
-            stats: model.duplicateProgress.map {
-                "\($0.filesSeen) candidates · \($0.groupsFound) groups"
-            } ?? "Starting…",
+            waiting: "Starting…",
+            count: model.duplicateProgress.map { String($0.filesSeen) } ?? "",
+            countLabel: " candidates · ",
+            amount: model.duplicateProgress.map { String($0.groupsFound) } ?? "",
+            amountLabel: " groups",
             path: model.duplicateProgress?.currentPath ?? "",
             stop: { model.cancelDuplicates() },
             stopLabel: "Stop duplicate search"

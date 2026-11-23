@@ -77,7 +77,12 @@ struct CategorySwatch: View {
 /// the title or the Stop button.
 struct ScanActivityPanel: View {
     var phase: ScanPhase?
-    var stats: String
+    /// Shown in place of the figures until the first progress update.
+    var waiting: String
+    var count: String
+    var countLabel: String
+    var amount: String
+    var amountLabel: String
     var path: String
     var stop: () -> Void
     var stopLabel: String
@@ -90,11 +95,15 @@ struct ScanActivityPanel: View {
                 .font(.headline)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)
-            Text(stats)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-                .lineLimit(1)
-                .frame(maxWidth: .infinity)
+            ZStack {
+                figures
+                    .opacity(phase == nil ? 0 : 1)
+                if phase == nil {
+                    Text(waiting)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(height: 20)
             Text(path.isEmpty ? " " : path)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -109,6 +118,25 @@ struct ScanActivityPanel: View {
         .padding(32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .transaction { $0.disablesAnimations = true }
+    }
+
+    /// Each number sits in its own slot, aligned to the trailing edge, so a
+    /// new digit grows left and the words beside it do not move.
+    private var figures: some View {
+        HStack(spacing: 0) {
+            slotted(count, width: 132)
+            Text(countLabel)
+            slotted(amount, width: 88)
+            Text(amountLabel)
+        }
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+    }
+
+    private func slotted(_ text: String, width: CGFloat) -> some View {
+        Text(text)
+            .monospacedDigit()
+            .frame(width: width, alignment: .trailing)
     }
 }
 
