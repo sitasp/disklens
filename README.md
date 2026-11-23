@@ -58,19 +58,22 @@ cargo run --manifest-path core/Cargo.toml -p diskscan-cli -- usage ~
 
 ## Build and run the Mac app
 
-The Swift app was written against the generated UniFFI bindings. It has **not** been compiled in this environment: the authoring machine is Linux and has no Xcode. Build it on a Mac with Xcode 15 or newer (the app targets macOS 14).
+The app targets macOS 14 and builds with Xcode 15 or newer. It was verified on macOS 27 with Xcode 27.2 and Rust 1.100.
 
 1. Install the tools if you do not have them.
 
    ```bash
    xcode-select --install
-   brew install xcodegen
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   source "$HOME/.cargo/env"
    ```
 
-2. From the repository root, build the universal static library and refresh the Swift bindings. This compiles for Apple silicon and Intel and creates `apple/Vendor/DiskScanFFI.xcframework`.
+   XcodeGen generates the project. `brew install xcodegen` works when the Command Line Tools are current enough for Homebrew. If Homebrew refuses to install packages because the Command Line Tools are older than the OS, put the XcodeGen binary on `PATH` yourself (this Mac uses `~/.local/bin/xcodegen`, version 2.48). `scripts/generate-xcode.sh` resolves that symlink so XcodeGen can find its setting presets. Without the presets the generated app has an empty product name.
+
+2. From the repository root, build the universal static library and refresh the Swift bindings. This compiles for Apple silicon and Intel, combines them with `lipo` into one macOS library (current Xcode rejects an XCFramework that lists the two architectures separately), sets the deployment target to 14.0, and creates `apple/Vendor/DiskScanFFI.xcframework`.
 
    ```bash
+   source "$HOME/.cargo/env"
    ./scripts/build-rust.sh
    ```
 
@@ -83,26 +86,32 @@ The Swift app was written against the generated UniFFI bindings. It has **not** 
 
 4. In Xcode, run the **DiskLens** scheme for the direct, unsandboxed app. The first window explains Full Disk Access. You can scan a folder you pick without that permission. Grant Full Disk Access (System Settings → Privacy & Security → Full Disk Access, add DiskLens, quit and reopen) when you want protected folders included.
 
+   A directory passed on the command line is scanned immediately. The built app from `xcodebuild` lives under DerivedData (`~/Library/Developer/Xcode/DerivedData/DiskLens-*/Build/Products/Debug/DiskLens.app`):
+
+   ```bash
+   open /path/to/DiskLens.app --args /path/to/folder
+   ```
+
    Run the **DiskLensStore** scheme for the sandboxed App Store build. It only reads folders you pick, saves a security-scoped bookmark for each one, and confirms that access again before a deletion. The product on disk is `DiskLensStore.app` so it does not overwrite the direct app. The bundle id is still `com.disklens.DiskLens`. See [docs/SANDBOX.md](docs/SANDBOX.md).
 
 5. To build and run the tests from the terminal:
 
    ```bash
    xcodebuild -project apple/DiskLens.xcodeproj -scheme DiskLens -destination 'platform=macOS' build test
-   xcodebuild -project apple/DiskLens.xcodeproj -scheme DiskLensStore -destination 'platform=macOS' build
+   xcodebuild -project apple/DiskLens.xcodeproj -scheme DiskLensStore -destination 'platform=macOS' build test
    ```
 
-Signing uses Automatic signing and your Apple ID team. The app is not sandboxed; see [docs/SANDBOX.md](docs/SANDBOX.md) before you ship it.
+Signing is ad hoc ("Sign to Run Locally"). No Apple Developer team is required to build, test, or launch on the same Mac. Notarization and App Store distribution still need a team. The direct app is not sandboxed; see [docs/SANDBOX.md](docs/SANDBOX.md) before you ship it.
 
 ### If the Rust static library fails to link
 
 The Swift file calls the C functions in `diskscanFFI`, so the linker should pull those symbols out of the static XCFramework. If a clean build reports undefined UniFFI symbols, add this to the DiskLens target's Other Linker Flags in `apple/project.yml` and regenerate:
 
 ```text
--force_load $(PROJECT_DIR)/Vendor/DiskScanFFI.xcframework/macos-arm64/libdiskscan.a
+-force_load $(PROJECT_DIR)/Vendor/DiskScanFFI.xcframework/macos-arm64_x86_64/libdiskscan.a
 ```
 
-Use the slice that matches the Mac you are building on (`macos-arm64` or `macos-x86_64`). Only do this if the link actually fails.
+Only do this if the link actually fails. The slice name is `macos-arm64_x86_64` because both architectures live in one library.
 
 ## Design choices
 
@@ -117,8 +126,8 @@ Use the slice that matches the Mac you are building on (`macos-arm64` or `macos-
 
 | Piece | Where it was checked |
 | --- | --- |
-| Rust scanner, categories, layout, duplicates, selection, deletion plans | `cargo test` and `cargo clippy --all-targets -- -D warnings` on Linux |
-| UniFFI Swift bindings | Generated on Linux from the host library with UniFFI 0.32 |
-| SwiftUI app, Xcode project, XCFramework, Quick Look, Trash | Not compiled here. Needs the steps above on a Mac. |
+| Rust scanner, categories, layout, duplicates, selection, deletion plans | `cargo test` and `cargo clippy --all-targets -- -D warnings` on Linux, and again on macOS 27 (Apple silicon) |
+| UniFFI Swift bindings | UniFFI 0.32. The committed Swift matches the library built on this Mac |
+| SwiftUI app, both schemes, XCFramework | `xcodebuild` build and test for DiskLens and DiskLensStore on macOS 27 with Xcode 27.2, ad-hoc signed |
 
 Continuous integration (`.github/workflows/ci.yml`) runs the Rust suite on Linux and, on a macOS 14 runner, the Rust script plus `xcodebuild` build and test.

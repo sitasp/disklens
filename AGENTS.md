@@ -30,7 +30,7 @@ On a Mac, after `make bindings`:
 open apple/DiskLens.xcodeproj
 ```
 
-`generate-xcode.sh` needs XcodeGen (`brew install xcodegen`) and refuses to run until the XCFramework exists.
+`generate-xcode.sh` needs XcodeGen on `PATH` (`brew install xcodegen`, or a binary such as `~/.local/bin/xcodegen` when Homebrew cannot install packages) and refuses to run until the XCFramework exists. The script resolves a symlinked `xcodegen` so its setting presets load.
 
 ## Conventions
 
