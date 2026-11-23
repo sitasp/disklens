@@ -27,6 +27,8 @@
 compile_error!("diskscan supports Unix only (macOS and Linux)");
 
 mod category;
+mod deletion;
+mod duplicates;
 mod error;
 mod format;
 mod identity;
@@ -36,9 +38,15 @@ mod platform;
 mod progress;
 mod query;
 mod scan;
+mod selection;
 mod volume;
 
 pub use category::{categorize, FileCategory};
+pub use deletion::{plan_deletion, DeletionEntry, DeletionPlan};
+pub use duplicates::{
+    find_duplicates, find_duplicates_in_node, reclaimable_bytes, DuplicateFile, DuplicateGroup,
+    DuplicateOptions, DuplicateReport,
+};
 pub use error::ScanError;
 pub use format::{format_bytes, format_tree};
 pub use identity::{identity_key, IdentityKey};
@@ -50,4 +58,7 @@ pub use model::{
 pub use progress::{ProgressReporter, ProgressUpdate, ScanPhase};
 pub use query::{query_files, summarize_categories};
 pub use scan::{scan, ScanOptions};
+pub use selection::{
+    protection_reason, select_group, FileDecision, GroupDecision, KeepStrategy, SelectionPolicy,
+};
 pub use volume::{filesystem_usage, FilesystemUsage};

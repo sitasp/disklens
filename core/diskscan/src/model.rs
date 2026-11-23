@@ -59,6 +59,8 @@ pub struct ScanNode {
     pub modified_unix_ms: Option<i64>,
     pub inode: Option<u64>,
     pub device: Option<u64>,
+    /// Hard-link count from `st_nlink`, when the scan was able to stat the entry.
+    pub nlink: Option<u64>,
     /// Present only when clone detection ran and the volume returned an id.
     pub clone_id: Option<u64>,
     /// `true` when another path already owns this inode or clone id, so this

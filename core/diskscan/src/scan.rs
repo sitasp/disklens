@@ -119,6 +119,7 @@ struct RawEntry {
     modified_unix_ms: Option<i64>,
     inode: Option<u64>,
     device: Option<u64>,
+    nlink: u64,
     clone_id: Option<u64>,
     error: Option<String>,
     other_volume: bool,
@@ -239,6 +240,7 @@ fn raw_from_entry(
     };
     let inode = Some(meta.ino());
     let device = Some(meta.dev());
+    let nlink = meta.nlink();
     let clone =
         if options.detect_clones && kind == NodeKind::File { clone_id(&path) } else { None };
     let error = entry.read_children_error.as_ref().map(ToString::to_string);
@@ -251,6 +253,7 @@ fn raw_from_entry(
         modified_unix_ms: modified_ms(&meta),
         inode,
         device,
+        nlink,
         clone_id: clone,
         error,
         other_volume,
@@ -351,6 +354,7 @@ impl Partial {
             modified_unix_ms: raw.modified_unix_ms,
             inode: raw.inode,
             device: raw.device,
+            nlink: Some(raw.nlink),
             clone_id: raw.clone_id,
             shared_elsewhere: false,
             other_volume: raw.other_volume,
@@ -375,6 +379,7 @@ fn placeholder(name: String, path: PathBuf, children: Vec<ScanNode>) -> ScanNode
         modified_unix_ms: None,
         inode: None,
         device: None,
+        nlink: None,
         clone_id: None,
         shared_elsewhere: false,
         other_volume: false,
