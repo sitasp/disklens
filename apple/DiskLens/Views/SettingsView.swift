@@ -61,6 +61,12 @@ struct SettingsView: View {
                 }
                 Button("Show the access guide") { model.showOnboarding = true }
             }
+            Section("About") {
+                LabeledContent("Version", value: AppRelease.label)
+                Text(AppRelease.note)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
         .padding(8)

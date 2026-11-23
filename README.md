@@ -133,6 +133,10 @@ Only do this if the link actually fails. The slice name is `macos-arm64_x86_64` 
 
 Continuous integration (`.github/workflows/ci.yml`) runs the Rust suite on Linux and, on a macOS 14 runner, the Rust script plus `xcodebuild` build and test.
 
+## Releases
+
+Versions are `vMAJOR.MINOR.PATCH` tags. Alphas and betas add `-alpha.N` or `-beta.N` and are GitHub prereleases. The app itself shows three numbers plus the channel, so this first public build is **0.1.0 alpha**. The scheme is in [docs/features/release-versioning.md](docs/features/release-versioning.md). Downloads are on the [GitHub mirror](https://github.com/sitasp/disklens/releases).
+
 ## Support
 
 If DiskLens saves you a cleanup afternoon:
