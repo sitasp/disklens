@@ -135,6 +135,7 @@ Continuous integration (`.github/workflows/ci.yml`) runs the Rust suite on Linux
 
 ## Support
 
-If DiskLens saves you a cleanup afternoon, you can buy me a coffee.
+If DiskLens saves you a cleanup afternoon:
 
+[![Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sitasp)
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/sitasp)
