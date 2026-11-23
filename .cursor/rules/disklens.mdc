@@ -1,0 +1,22 @@
+---
+description: How to change DiskLens without breaking the Rust/Swift boundary
+globs:
+  - core/**/*.rs
+  - apple/**/*.swift
+  - scripts/**
+  - docs/**
+alwaysApply: true
+---
+
+DiskLens is a macOS disk map. Rust in `core/` scans, hashes, and selects. SwiftUI in `apple/` draws and deletes. UniFFI is the only bridge, and the exported surface lives in `core/diskscan/src/ffi.rs`.
+
+- Run `make test` and `make clippy` after Rust edits. Clippy is `-D warnings`.
+- Do not hand-edit `apple/Generated`. Run `scripts/build-rust.sh` and update Swift call sites to the generated names.
+- Keep three size fields: logical apparent, unique apparent, unique allocated. Hard links and APFS clone ids share a unique size.
+- Smart selection never auto-selects protected paths (`/System`, `Library`, app bundles, photo libraries). Add a unit test when that rule changes.
+- `plan_deletion` must not delete. Trash and permanent delete stay in `TrashService.swift`. Permanent delete requires the word DELETE.
+- Cancellation returns `ScanError::Cancelled` and no partial tree.
+- Do not commit `core/target`, the XCFramework, or the generated `.xcodeproj`.
+- Linux cannot build the Mac app. Say so instead of claiming the Swift target was compiled.
+
+Read `AGENTS.md` and `docs/ARCHITECTURE.md` before restructuring modules.

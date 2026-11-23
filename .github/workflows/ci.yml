@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  rust:
+    name: Rust tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format
+        working-directory: core
+        run: cargo fmt --all --check
+      - name: Clippy
+        working-directory: core
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Test
+        working-directory: core
+        run: cargo test --workspace
+
+  macos:
+    name: Mac app
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+      - name: XcodeGen
+        run: brew install xcodegen
+      - name: Rust XCFramework and Swift bindings
+        run: ./scripts/build-rust.sh
+      - name: Generate the Xcode project
+        run: ./scripts/generate-xcode.sh
+      - name: Build and test
+        run: xcodebuild -project apple/DiskLens.xcodeproj -scheme DiskLens -destination 'platform=macOS' -quiet build test

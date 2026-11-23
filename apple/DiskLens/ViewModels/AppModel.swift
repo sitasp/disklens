@@ -228,17 +228,21 @@ final class AppModel {
         scanProgress = nil
         hovered = nil
         let options = settings.scanOptions(stayOnFilesystem: stayOnFilesystem)
-        Task.detached(priority: .userInitiated) { [weak self] in
+        let model = UncheckedSendable(self)
+        Task.detached(priority: .userInitiated) {
+            let outcome: Result<ScanSession, Error>
             do {
-                let session = try scanFolder(path: path, options: options, cancel: flag, progress: relay)
-                await MainActor.run {
-                    guard let self, self.scanGeneration == generation else { return }
-                    self.adoptScan(session, root: path)
-                }
+                outcome = .success(try scanFolder(path: path, options: options, cancel: flag, progress: relay))
             } catch {
-                await MainActor.run {
-                    guard let self, self.scanGeneration == generation else { return }
-                    self.finishScanFailure(error)
+                outcome = .failure(error)
+            }
+            await MainActor.run {
+                guard model.value.scanGeneration == generation else { return }
+                switch outcome {
+                case .success(let session):
+                    model.value.adoptScan(session, root: path)
+                case .failure(let error):
+                    model.value.finishScanFailure(error)
                 }
             }
         }
@@ -318,17 +322,21 @@ final class AppModel {
         duplicateProgress = nil
         duplicateRoot = path
         let options = settings.duplicateOptions()
-        Task.detached(priority: .userInitiated) { [weak self] in
+        let model = UncheckedSendable(self)
+        Task.detached(priority: .userInitiated) {
+            let outcome: Result<DuplicateSession, Error>
             do {
-                let found = try findDuplicateFiles(path: path, options: options, cancel: flag, progress: relay)
-                await MainActor.run {
-                    guard let self, self.duplicateGeneration == generation else { return }
-                    self.adoptDuplicates(found, root: path)
-                }
+                outcome = .success(try findDuplicateFiles(path: path, options: options, cancel: flag, progress: relay))
             } catch {
-                await MainActor.run {
-                    guard let self, self.duplicateGeneration == generation else { return }
-                    self.finishDuplicateFailure(error)
+                outcome = .failure(error)
+            }
+            await MainActor.run {
+                guard model.value.duplicateGeneration == generation else { return }
+                switch outcome {
+                case .success(let found):
+                    model.value.adoptDuplicates(found, root: path)
+                case .failure(let error):
+                    model.value.finishDuplicateFailure(error)
                 }
             }
         }
