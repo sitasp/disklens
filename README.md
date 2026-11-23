@@ -40,6 +40,7 @@ A longer version of that picture, and the reason each size number exists, is in 
 | `scripts/build-rust.sh` | Builds the library and, on a Mac, the XCFramework. |
 | `docs/ARCHITECTURE.md` | How the pieces fit. |
 | `docs/SANDBOX.md` | Why the app is not sandboxed, and how Full Disk Access works. |
+| `docs/features/` | Implementation notes for the Mac build, clone identity, tests, and the chart fixes. |
 | `AGENTS.md` | Notes for the next person or agent changing the code. |
 
 ## Try the engine without Xcode

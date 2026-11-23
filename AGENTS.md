@@ -10,7 +10,7 @@ DiskLens is a macOS disk map. Rust (`core/`) walks, hashes, and decides. SwiftUI
 - `apple/Generated` — UniFFI output. Do not edit by hand. Regenerate with `scripts/build-rust.sh`.
 - `apple/project.yml` — XcodeGen spec. The `.xcodeproj` is generated and gitignored.
 - `scripts/build-rust.sh` — host build plus Swift bindings. On macOS, also the universal XCFramework.
-- `docs/` — architecture and the sandbox decision.
+- `docs/` — architecture, the sandbox decision, and `docs/features/` for the Mac build and the fixes that landed with it.
 
 ## Commands
 
