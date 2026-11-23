@@ -1,5 +1,9 @@
 import XCTest
+#if DISKLENS_SANDBOX
+@testable import DiskLensStore
+#else
 @testable import DiskLens
+#endif
 
 final class PathAndHistoryTests: XCTestCase {
     func testCrumbsStayInsideTheScanRoot() {
@@ -47,6 +51,7 @@ final class PathAndHistoryTests: XCTestCase {
         XCTAssertFalse(PermanentDeleteGate.accepts("DELETE please"))
     }
 
+    @MainActor
     func testHistoryRoundTrip() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

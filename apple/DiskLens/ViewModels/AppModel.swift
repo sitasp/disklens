@@ -129,6 +129,7 @@ final class AppModel {
     var protectedPrompt: ProtectedPrompt?
     var showOnboarding: Bool
 
+    private var didConsumeLaunchPath = false
     private var scanCancel: CancelFlag?
     private var scanRelay: ProgressRelay?
     private var duplicateCancel: CancelFlag?
@@ -158,6 +159,22 @@ final class AppModel {
     var crumbs: [(title: String, path: String)] {
         guard let scanRoot, let currentPath else { return [] }
         return DiskPaths.crumbs(root: scanRoot, current: currentPath)
+    }
+
+    /// `open DiskLens.app --args /path/to/folder` scans that directory.
+    /// The first existing directory argument wins. Anything else is ignored.
+    func openInitialPathIfPresent() {
+        guard !didConsumeLaunchPath else { return }
+        didConsumeLaunchPath = true
+        let path = CommandLine.arguments.dropFirst().first { candidate in
+            var isDirectory: ObjCBool = false
+            return FileManager.default.fileExists(atPath: candidate, isDirectory: &isDirectory)
+                && isDirectory.boolValue
+        }
+        guard let path else { return }
+        dismissOnboarding()
+        beginScan(path: path, stayOnFilesystem: false)
+        section = .map
     }
 
     func dismissOnboarding() {
@@ -253,7 +270,7 @@ final class AppModel {
         let generation = scanGeneration
         let flag = CancelFlag()
         scanCancel = flag
-        let box = UncheckedSendable(self)
+        let box = UncheckedSendable(value: self)
         let relay = ProgressRelay { update in
             Task { @MainActor in
                 box.value.scanProgress = update
@@ -264,7 +281,7 @@ final class AppModel {
         scanProgress = nil
         hovered = nil
         let options = settings.scanOptions(stayOnFilesystem: stayOnFilesystem)
-        let model = UncheckedSendable(self)
+        let model = UncheckedSendable(value: self)
         Task.detached(priority: .userInitiated) {
             let outcome: Result<ScanSession, Error>
             do {
@@ -351,7 +368,7 @@ final class AppModel {
         let generation = duplicateGeneration
         let flag = CancelFlag()
         duplicateCancel = flag
-        let box = UncheckedSendable(self)
+        let box = UncheckedSendable(value: self)
         let relay = ProgressRelay { update in
             Task { @MainActor in
                 box.value.duplicateProgress = update
@@ -362,7 +379,7 @@ final class AppModel {
         duplicateProgress = nil
         duplicateRoot = path
         let options = settings.duplicateOptions()
-        let model = UncheckedSendable(self)
+        let model = UncheckedSendable(value: self)
         Task.detached(priority: .userInitiated) {
             let outcome: Result<DuplicateSession, Error>
             do {

@@ -40,6 +40,7 @@ struct RootView: View {
             if model.volumes.isEmpty {
                 model.refreshVolumes()
             }
+            model.openInitialPathIfPresent()
         }
     }
 

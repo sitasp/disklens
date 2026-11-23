@@ -80,7 +80,7 @@ struct LargeFilesView: View {
                             .lineLimit(1)
                     }
                 }
-                .contextMenu(forSelectionType: FileRow.self) { paths in
+                .contextMenu(forSelectionType: String.self) { paths in
                     Button("Reveal in Finder") {
                         if let path = paths.first {
                             model.reveal(path)
